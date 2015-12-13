@@ -5,7 +5,7 @@
 
 #define PYTHONDIR "/usr/local/lib/python2.7/dist-packages"
 #define PYTHONARCHDIR "/usr/local/lib/python2.7/dist-packages"
-#define HAVE_PYTHON_H 1
+/* #undef HAVE_PYTHON_H */
 #define HAVE_GTK2 1
 #define HAVE_LIBXML2 1
 
