@@ -1,13 +1,13 @@
-# project ns (3.22) configured on Sat Nov 21 09:13:28 2015 by
+# project ns (3.22) configured on Mon Dec 14 09:53:45 2015 by
 # waf 1.7.16 (abi 98, python 20703f0 on linux2)
-# using waf configure --with-pybindgen ../pybindgen-0.17.0.886
+# using ./waf configure
 #
 ----------------------------------------
 Setting top to
-/home/zwz/ns-allinone-3.22/ns-3.22
+/home/zwz/ns-3.22/ns-3.22
 ----------------------------------------
 Setting out to
-/home/zwz/ns-allinone-3.22/ns-3.22/build
+/home/zwz/ns-3.22/ns-3.22/build
 ----------------------------------------
 Checking for 'gcc' (c compiler)
 find program=['gcc', 'cc'] paths=['/usr/lib/lightdm/lightdm', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games'] var='CC' -> '/usr/bin/gcc'
@@ -33,7 +33,7 @@ int main() { return 0; }
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-Wl,--soname=foo', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cc', '-c', '-o', 'test.cc.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 ok
 ---------------------------------------------------------
 Checking for program python
@@ -106,49 +106,16 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fwrapv', '-fstack-protector', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DPYTHONDIR="/usr/local/lib/python2.7/dist-packages"', '-DPYTHONARCHDIR="/usr/local/lib/python2.7/dist-packages"', '-DNDEBUG', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_3b2479b91ea1f8aedc2bbc867fa4858e/testbuild/test.cpp.1.o -> build/.conf_check_3b2479b91ea1f8aedc2bbc867fa4858e/testbuild/testprog
 [0m
-['/usr/bin/g++', '-Wl,-Bsymbolic-functions', '-Wl,-z,relro', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_3b2479b91ea1f8aedc2bbc867fa4858e/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib', '-lpython2.7']
-err: /usr/bin/ld: cannot find -lpython2.7
-collect2: ld returned 1 exit status
-
-from /home/zwz/ns-allinone-3.22/ns-3.22/bindings/python: Test does not build: Traceback (most recent call last):
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
-    bld.compile()
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
-    raise Errors.BuildError(self.producer.error)
-BuildError: Build failed
- -> task in 'testprog' failed (exit status 1): 
-	{task 166761644: cxxprogram test.cpp.1.o -> testprog}
-['/usr/bin/g++', '-Wl,-Bsymbolic-functions', '-Wl,-z,relro', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_3b2479b91ea1f8aedc2bbc867fa4858e/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib', '-lpython2.7']
-
-not found
-from /home/zwz/ns-allinone-3.22/ns-3.22/bindings/python: The configuration failed
-
-
-# try again with -L$python_LIBPL (some systems don't install the python library in $prefix/lib)
-
----------------------------------------------------------
-Checking for library python2.7 in python_LIBPL
-==>
-
-int main(int argc, char **argv) {
-	(void)argc; (void)argv;
-	return 0;
-}
-
-<==
-[1/2] [32mcxx: build/.conf_check_08f1441e1c79d73c1266211066f0108c/test.cpp -> build/.conf_check_08f1441e1c79d73c1266211066f0108c/testbuild/test.cpp.1.o
-[0m
-['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fwrapv', '-fstack-protector', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DPYTHONDIR="/usr/local/lib/python2.7/dist-packages"', '-DPYTHONARCHDIR="/usr/local/lib/python2.7/dist-packages"', '-DNDEBUG', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
-[2/2] [33mcxxprogram: build/.conf_check_08f1441e1c79d73c1266211066f0108c/testbuild/test.cpp.1.o -> build/.conf_check_08f1441e1c79d73c1266211066f0108c/testbuild/testprog
-[0m
-['/usr/bin/g++', '-Wl,-Bsymbolic-functions', '-Wl,-z,relro', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_08f1441e1c79d73c1266211066f0108c/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib/python2.7/config', '-lpython2.7']
+['/usr/bin/g++', '-Wl,-Bsymbolic-functions', '-Wl,-z,relro', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_3b2479b91ea1f8aedc2bbc867fa4858e/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib', '-lpython2.7']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for program /usr/bin/python-config,python2.7-config,python-config-2.7,python2.7m-config
-not found
-find program=['/usr/bin/python-config', 'python2.7-config', 'python-config-2.7', 'python2.7m-config'] paths=['/usr/lib/lightdm/lightdm', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games'] var='PYTHON_CONFIG' -> ''
-from /home/zwz/ns-allinone-3.22/ns-3.22/bindings/python: Could not find the program /usr/bin/python-config,python2.7-config,python-config-2.7,python2.7m-config
-Include path for Python extensions (found via distutils module): '/usr/include/python2.7'
+/usr/bin/python-config
+find program=['/usr/bin/python-config', 'python2.7-config', 'python-config-2.7', 'python2.7m-config'] paths=['/usr/lib/lightdm/lightdm', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games'] var='PYTHON_CONFIG' -> '/usr/bin/python-config'
+['/usr/bin/python-config', '--includes']
+out: -I/usr/include/python2.7 -I/usr/include/python2.7
+
+Include path for Python extensions (found via python-config --includes): ['/usr/include/python2.7']
 
 ------------------------------------------------------------------------------------------------
 Checking for header Python.h
@@ -175,33 +142,140 @@ int main(int argc, char **argv)
 [1/2] [32mcxx: build/.conf_check_1f933b02106127ce3a9f4633a0e368e7/test.cpp -> build/.conf_check_1f933b02106127ce3a9f4633a0e368e7/testbuild/test.cpp.1.o
 [0m
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fwrapv', '-fstack-protector', '-fno-strict-aliasing', '-I/usr/include/python2.7', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DPYTHONDIR="/usr/local/lib/python2.7/dist-packages"', '-DPYTHONARCHDIR="/usr/local/lib/python2.7/dist-packages"', '-DNDEBUG', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
-err: ../test.cpp:2:20: fatal error: Python.h: No such file or directory
-compilation terminated.
+[2/2] [33mcxxprogram: build/.conf_check_1f933b02106127ce3a9f4633a0e368e7/testbuild/test.cpp.1.o -> build/.conf_check_1f933b02106127ce3a9f4633a0e368e7/testbuild/testprog
+[0m
+['/usr/bin/g++', '-Wl,-Bsymbolic-functions', '-Wl,-z,relro', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_1f933b02106127ce3a9f4633a0e368e7/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-L/usr/lib', '-lpython2.7']
+yes
+------------------------------------------------------------------------------------------------
+Checking for compilation flag -fvisibility=hidden... support
+==>
+#include <stdio.h>
+int main() { return 0; }
 
-from /home/zwz/ns-allinone-3.22/ns-3.22/bindings/python: Test does not build: Traceback (most recent call last):
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
+<==
+[1/2] [32mcxx: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/test.cc -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fvisibility=hidden', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DPYTHONDIR="/usr/local/lib/python2.7/dist-packages"', '-DPYTHONARCHDIR="/usr/local/lib/python2.7/dist-packages"', '-DHAVE_PYTHON_H=1', '../test.cc', '-c', '-o', 'test.cc.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+ok
+------------------------------------------------------------------------------------------------
+Checking for compilation flag -Wno-array-bounds... support
+==>
+#include <stdio.h>
+int main() { return 0; }
+
+<==
+[1/2] [32mcxx: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/test.cc -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-Wno-array-bounds', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DPYTHONDIR="/usr/local/lib/python2.7/dist-packages"', '-DPYTHONARCHDIR="/usr/local/lib/python2.7/dist-packages"', '-DHAVE_PYTHON_H=1', '../test.cc', '-c', '-o', 'test.cc.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+ok
+------------------------------------------------------------------------------------------------
+Checking for pybindgen location
+../pybindgen-0.17.0.886 (guessed)
+------------------------------------------------------------------------------------------------
+Python module pybindgen
+['/usr/bin/python', '-c', "\nimport pybindgen as current_module\nversion = getattr(current_module, '__version__', None)\nif version is not None:\n    print(str(version))\nelse:\n    print('unknown version')\n"]
+out: 0.17.0.886
+
+0.17.0.886
+------------------------------------------------------------------------------------------------
+Checking for pybindgen version
+0.17.0.886
+==>
+
+#include <stdint.h>
+#include <vector>
+
+int main ()
+{
+   std::vector< uint64_t > t = std::vector< unsigned long > ();
+   return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_efd20fc635aad783e4d3953701740533/test.cc -> build/.conf_check_efd20fc635aad783e4d3953701740533/testbuild/test.cc.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DPYTHONDIR="/usr/local/lib/python2.7/dist-packages"', '-DPYTHONARCHDIR="/usr/local/lib/python2.7/dist-packages"', '-DHAVE_PYTHON_H=1', '../test.cc', '-c', '-o', 'test.cc.1.o']
+err: ../test.cc: 在函数‘int main()’中:
+../test.cc:7:62: 错误： 请求从‘std::vector<long unsigned int>’转换到非标量类型‘std::vector<long long unsigned int>’
+
+from /home/zwz/ns-3.22/ns-3.22/bindings/python: Test does not build: Traceback (most recent call last):
+  File "/home/zwz/ns-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
     bld.compile()
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
+  File "/home/zwz/ns-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
     raise Errors.BuildError(self.producer.error)
 BuildError: Build failed
  -> task in 'testprog' failed (exit status 1): 
-	{task 167113580: cxx test.cpp -> test.cpp.1.o}
-['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-fno-strict-aliasing', '-fwrapv', '-fstack-protector', '-fno-strict-aliasing', '-I/usr/include/python2.7', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DPYTHONDIR="/usr/local/lib/python2.7/dist-packages"', '-DPYTHONARCHDIR="/usr/local/lib/python2.7/dist-packages"', '-DNDEBUG', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+	{task 153742604: cxx test.cc -> test.cc.1.o}
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DPYTHONDIR="/usr/local/lib/python2.7/dist-packages"', '-DPYTHONARCHDIR="/usr/local/lib/python2.7/dist-packages"', '-DHAVE_PYTHON_H=1', '../test.cc', '-c', '-o', 'test.cc.1.o']
 
-:-(
-from /home/zwz/ns-allinone-3.22/ns-3.22/bindings/python: The configuration failed
 ------------------------------------------------------------------------------------------------
-Asking python-config for pyembed --cflags flags
-[[], '--cflags']
+Checking for types uint64_t and unsigned long equivalence
+no
+==>
+
+#include <stdint.h>
+#include <vector>
+
+int main ()
+{
+   std::vector< uint64_t > t = std::vector< unsigned long long > ();
+   return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_355be13189b7b0ddfb123175e2bb33a5/test.cc -> build/.conf_check_355be13189b7b0ddfb123175e2bb33a5/testbuild/test.cc.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DPYTHONDIR="/usr/local/lib/python2.7/dist-packages"', '-DPYTHONARCHDIR="/usr/local/lib/python2.7/dist-packages"', '-DHAVE_PYTHON_H=1', '../test.cc', '-c', '-o', 'test.cc.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_355be13189b7b0ddfb123175e2bb33a5/testbuild/test.cc.1.o -> build/.conf_check_355be13189b7b0ddfb123175e2bb33a5/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_355be13189b7b0ddfb123175e2bb33a5/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+------------------------------------------------------------------------------------------------
+Checking for types uint64_t and unsigned long long equivalence
+yes
+------------------------------------------------------------------------------------------------
+Checking for the apidefs that can be used for Python bindings
+gcc-ILP32
+------------------------------------------------------------------------------------------------
+Checking for internal GCC cxxabi
+==>
+
+# include <cxxabi.h>
+int main ()
+{
+   const abi::__si_class_type_info *_typeinfo  __attribute__((unused)) = NULL;
+   return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_97f735b5464546b54ea13ec62d1c17e5/test.cpp -> build/.conf_check_97f735b5464546b54ea13ec62d1c17e5/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DPYTHONDIR="/usr/local/lib/python2.7/dist-packages"', '-DPYTHONARCHDIR="/usr/local/lib/python2.7/dist-packages"', '-DHAVE_PYTHON_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_97f735b5464546b54ea13ec62d1c17e5/testbuild/test.cpp.1.o -> build/.conf_check_97f735b5464546b54ea13ec62d1c17e5/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_97f735b5464546b54ea13ec62d1c17e5/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+complete
+------------------------------------------------------------------------------------------------
+Python module pygccxml
+['/usr/bin/python', '-c', "\nimport pygccxml as current_module\nversion = getattr(current_module, '__version__', None)\nif version is not None:\n    print(str(version))\nelse:\n    print('unknown version')\n"]
+err: Traceback (most recent call last):
+  File "<string>", line 2, in <module>
+ImportError: No module named pygccxml
+
 not found
-from /home/zwz/ns-allinone-3.22/ns-3.22/bindings/python: The configuration failed
+from /home/zwz/ns-3.22/ns-3.22/bindings/python: Could not find the python module 'pygccxml'
 ------------------------------------------------------------------------------------------------
 Checking boost includes
-from /home/zwz/ns-allinone-3.22/ns-3.22/src: headers not found, please provide a --boost-includes argument (see help)
+from /home/zwz/ns-3.22/ns-3.22/src: headers not found, please provide a --boost-includes argument (see help)
 not found
 ------------------------------------------------------------------------------------------------
 Checking boost includes
-from /home/zwz/ns-allinone-3.22/ns-3.22/src: headers not found, please provide a --boost-includes argument (see help)
+from /home/zwz/ns-3.22/ns-3.22/src: headers not found, please provide a --boost-includes argument (see help)
 not found
 ------------------------------------------------------------------------------------------------
 Checking for click location
@@ -240,24 +314,24 @@ int main(int argc, char **argv) {
 [1/2] [32mcxx: build/.conf_check_656b178ce7442053dff90315b31a1cc5/test.cpp -> build/.conf_check_656b178ce7442053dff90315b31a1cc5/testbuild/test.cpp.1.o
 [0m
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
-err: ../test.cpp: In function ‘int main(int, char**)’:
-../test.cpp:5:7: error: ‘uint128_t’ was not declared in this scope
-../test.cpp:5:18: error: expected primary-expression before ‘)’ token
-../test.cpp:5:20: error: expected ‘)’ before numeric constant
-../test.cpp:6:14: error: ‘uint128_t’ was not declared in this scope
+err: ../test.cpp: 在函数‘int main(int, char**)’中:
+../test.cpp:5:7: 错误： ‘uint128_t’在此作用域中尚未声明
+../test.cpp:5:18: 错误： expected primary-expression before ‘)’ token
+../test.cpp:5:20: 错误： expected ‘)’ before numeric constant
+../test.cpp:6:14: 错误： ‘uint128_t’在此作用域中尚未声明
 
-from /home/zwz/ns-allinone-3.22/ns-3.22/src/core: Test does not build: Traceback (most recent call last):
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
+from /home/zwz/ns-3.22/ns-3.22/src/core: Test does not build: Traceback (most recent call last):
+  File "/home/zwz/ns-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
     bld.compile()
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
+  File "/home/zwz/ns-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
     raise Errors.BuildError(self.producer.error)
 BuildError: Build failed
  -> task in 'testprog' failed (exit status 1): 
-	{task 166940396: cxx test.cpp -> test.cpp.1.o}
+	{task 153242796: cxx test.cpp -> test.cpp.1.o}
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 
 not found
-from /home/zwz/ns-allinone-3.22/ns-3.22/src/core: The configuration failed
+from /home/zwz/ns-3.22/ns-3.22/src/core: The configuration failed
 ------------------------------------------------------------------------------------------------
 Checking for type __uint128_t
 ==>
@@ -274,24 +348,24 @@ int main(int argc, char **argv) {
 [1/2] [32mcxx: build/.conf_check_ace1886511f08627ee2e4ca020806295/test.cpp -> build/.conf_check_ace1886511f08627ee2e4ca020806295/testbuild/test.cpp.1.o
 [0m
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
-err: ../test.cpp: In function ‘int main(int, char**)’:
-../test.cpp:5:7: error: ‘__uint128_t’ was not declared in this scope
-../test.cpp:5:20: error: expected primary-expression before ‘)’ token
-../test.cpp:5:22: error: expected ‘)’ before numeric constant
-../test.cpp:6:14: error: ‘__uint128_t’ was not declared in this scope
+err: ../test.cpp: 在函数‘int main(int, char**)’中:
+../test.cpp:5:7: 错误： ‘__uint128_t’在此作用域中尚未声明
+../test.cpp:5:20: 错误： expected primary-expression before ‘)’ token
+../test.cpp:5:22: 错误： expected ‘)’ before numeric constant
+../test.cpp:6:14: 错误： ‘__uint128_t’在此作用域中尚未声明
 
-from /home/zwz/ns-allinone-3.22/ns-3.22/src/core: Test does not build: Traceback (most recent call last):
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
+from /home/zwz/ns-3.22/ns-3.22/src/core: Test does not build: Traceback (most recent call last):
+  File "/home/zwz/ns-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
     bld.compile()
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
+  File "/home/zwz/ns-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
     raise Errors.BuildError(self.producer.error)
 BuildError: Build failed
  -> task in 'testprog' failed (exit status 1): 
-	{task 167068972: cxx test.cpp -> test.cpp.1.o}
+	{task 153257964: cxx test.cpp -> test.cpp.1.o}
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 
 not found
-from /home/zwz/ns-allinone-3.22/ns-3.22/src/core: The configuration failed
+from /home/zwz/ns-3.22/ns-3.22/src/core: The configuration failed
 ------------------------------------------------------------------------------------------------
 Checking high precision implementation
 cairo 128-bit integer (default)
@@ -311,7 +385,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_fa0c4ec9c63ac505501cc0863d9bdc48/testbuild/test.cpp.1.o -> build/.conf_check_fa0c4ec9c63ac505501cc0863d9bdc48/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_fa0c4ec9c63ac505501cc0863d9bdc48/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_fa0c4ec9c63ac505501cc0863d9bdc48/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header inttypes.h
@@ -329,7 +403,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_STDINT_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_7c67b81911f8bf0aede92c843d0e47cf/testbuild/test.cpp.1.o -> build/.conf_check_7c67b81911f8bf0aede92c843d0e47cf/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_7c67b81911f8bf0aede92c843d0e47cf/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_7c67b81911f8bf0aede92c843d0e47cf/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header sys/inttypes.h
@@ -345,21 +419,21 @@ int main(int argc, char **argv) {
 [1/2] [32mcxx: build/.conf_check_61ecbfef21667d45a28decabe37fdf64/test.cpp -> build/.conf_check_61ecbfef21667d45a28decabe37fdf64/testbuild/test.cpp.1.o
 [0m
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
-err: ../test.cpp:1:26: fatal error: sys/inttypes.h: No such file or directory
-compilation terminated.
+err: ../test.cpp:1:26: 致命错误： sys/inttypes.h：没有那个文件或目录
+编译中断。
 
-from /home/zwz/ns-allinone-3.22/ns-3.22/src/core: Test does not build: Traceback (most recent call last):
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
+from /home/zwz/ns-3.22/ns-3.22/src/core: Test does not build: Traceback (most recent call last):
+  File "/home/zwz/ns-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
     bld.compile()
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
+  File "/home/zwz/ns-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
     raise Errors.BuildError(self.producer.error)
 BuildError: Build failed
  -> task in 'testprog' failed (exit status 1): 
-	{task 167133164: cxx test.cpp -> test.cpp.1.o}
+	{task 153351660: cxx test.cpp -> test.cpp.1.o}
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 
 not found
-from /home/zwz/ns-allinone-3.22/ns-3.22/src/core: The configuration failed
+from /home/zwz/ns-3.22/ns-3.22/src/core: The configuration failed
 ------------------------------------------------------------------------------------------------
 Checking for header sys/types.h
 ==>
@@ -376,7 +450,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_8d38681417ac64f5b5b7d4ca87b0e4f3/testbuild/test.cpp.1.o -> build/.conf_check_8d38681417ac64f5b5b7d4ca87b0e4f3/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_8d38681417ac64f5b5b7d4ca87b0e4f3/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_8d38681417ac64f5b5b7d4ca87b0e4f3/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header sys/stat.h
@@ -394,7 +468,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_8dd79274749d59bf459dfbeb1200c7d7/testbuild/test.cpp.1.o -> build/.conf_check_8dd79274749d59bf459dfbeb1200c7d7/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_8dd79274749d59bf459dfbeb1200c7d7/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_8dd79274749d59bf459dfbeb1200c7d7/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header dirent.h
@@ -412,7 +486,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_c94d96928742c001335a0559791a93d8/testbuild/test.cpp.1.o -> build/.conf_check_c94d96928742c001335a0559791a93d8/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_c94d96928742c001335a0559791a93d8/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_c94d96928742c001335a0559791a93d8/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header stdlib.h
@@ -430,7 +504,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_3a82ef2f96ebcc67f6086c98d2e6291e/testbuild/test.cpp.1.o -> build/.conf_check_3a82ef2f96ebcc67f6086c98d2e6291e/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_3a82ef2f96ebcc67f6086c98d2e6291e/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_3a82ef2f96ebcc67f6086c98d2e6291e/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header signal.h
@@ -448,7 +522,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_48955ac54d2136a572805353a7b9b62d/testbuild/test.cpp.1.o -> build/.conf_check_48955ac54d2136a572805353a7b9b62d/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_48955ac54d2136a572805353a7b9b62d/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_48955ac54d2136a572805353a7b9b62d/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header pthread.h
@@ -468,7 +542,7 @@ int main ()
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-pthread', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_2be466e82e703a744ee152afe2b58299/testbuild/test.cpp.1.o -> build/.conf_check_2be466e82e703a744ee152afe2b58299/testbuild/testprog
 [0m
-['/usr/bin/g++', '-pthread', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_2be466e82e703a744ee152afe2b58299/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', '-pthread', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_2be466e82e703a744ee152afe2b58299/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header stdint.h
@@ -486,7 +560,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_INTTYPES_H=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_fa0c4ec9c63ac505501cc0863d9bdc48/testbuild/test.cpp.1.o -> build/.conf_check_fa0c4ec9c63ac505501cc0863d9bdc48/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_fa0c4ec9c63ac505501cc0863d9bdc48/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_fa0c4ec9c63ac505501cc0863d9bdc48/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header inttypes.h
@@ -504,7 +578,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '-DHAVE_STDINT_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_7c67b81911f8bf0aede92c843d0e47cf/testbuild/test.cpp.1.o -> build/.conf_check_7c67b81911f8bf0aede92c843d0e47cf/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_7c67b81911f8bf0aede92c843d0e47cf/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_7c67b81911f8bf0aede92c843d0e47cf/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header sys/inttypes.h
@@ -520,21 +594,21 @@ int main(int argc, char **argv) {
 [1/2] [32mcxx: build/.conf_check_61ecbfef21667d45a28decabe37fdf64/test.cpp -> build/.conf_check_61ecbfef21667d45a28decabe37fdf64/testbuild/test.cpp.1.o
 [0m
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
-err: ../test.cpp:1:26: fatal error: sys/inttypes.h: No such file or directory
-compilation terminated.
+err: ../test.cpp:1:26: 致命错误： sys/inttypes.h：没有那个文件或目录
+编译中断。
 
-from /home/zwz/ns-allinone-3.22/ns-3.22/src/core: Test does not build: Traceback (most recent call last):
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
+from /home/zwz/ns-3.22/ns-3.22/src/core: Test does not build: Traceback (most recent call last):
+  File "/home/zwz/ns-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Tools/c_config.py", line 460, in run_c_code
     bld.compile()
-  File "/home/zwz/ns-allinone-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
+  File "/home/zwz/ns-3.22/ns-3.22/.waf-1.7.16-9ca17eb492c97b689870b4ff9db75880/waflib/Build.py", line 188, in compile
     raise Errors.BuildError(self.producer.error)
 BuildError: Build failed
  -> task in 'testprog' failed (exit status 1): 
-	{task 167163308: cxx test.cpp -> test.cpp.1.o}
+	{task 153755436: cxx test.cpp -> test.cpp.1.o}
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 
 not found
-from /home/zwz/ns-allinone-3.22/ns-3.22/src/core: The configuration failed
+from /home/zwz/ns-3.22/ns-3.22/src/core: The configuration failed
 ------------------------------------------------------------------------------------------------
 Checking for library rt
 ==>
@@ -550,7 +624,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-pthread', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DINT64X64_USE_CAIRO=1', '-DHAVE_SYS_TYPES_H=1', '-DHAVE_SYS_STAT_H=1', '-DHAVE_DIRENT_H=1', '-DHAVE_STDLIB_H=1', '-DHAVE_GETENV=1', '-DHAVE_SIGNAL_H=1', '-DHAVE_PTHREAD_H=1', '-DHAVE_STDINT_H=1', '-DHAVE_INTTYPES_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_5ef57bc0d8aa3565949b6ce1186fd4a7/testbuild/test.cpp.1.o -> build/.conf_check_5ef57bc0d8aa3565949b6ce1186fd4a7/testbuild/testprog
 [0m
-['/usr/bin/g++', '-pthread', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_5ef57bc0d8aa3565949b6ce1186fd4a7/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-lrt']
+['/usr/bin/g++', '-pthread', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_5ef57bc0d8aa3565949b6ce1186fd4a7/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic', '-lrt']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header sys/ioctl.h
@@ -568,7 +642,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_ebd591dbc3bb45aa25214505e9aa0d0f/testbuild/test.cpp.1.o -> build/.conf_check_ebd591dbc3bb45aa25214505e9aa0d0f/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_ebd591dbc3bb45aa25214505e9aa0d0f/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_ebd591dbc3bb45aa25214505e9aa0d0f/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header net/if.h
@@ -586,7 +660,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_ab7199aa46fcaa2e15071e73776f8218/testbuild/test.cpp.1.o -> build/.conf_check_ab7199aa46fcaa2e15071e73776f8218/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_ab7199aa46fcaa2e15071e73776f8218/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_ab7199aa46fcaa2e15071e73776f8218/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header net/ethernet.h
@@ -604,7 +678,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '-DHAVE_IF_NETS_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_6c6255d84543ffa2d8b83c989561eef9/testbuild/test.cpp.1.o -> build/.conf_check_6c6255d84543ffa2d8b83c989561eef9/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_6c6255d84543ffa2d8b83c989561eef9/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_6c6255d84543ffa2d8b83c989561eef9/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header linux/if_tun.h
@@ -622,7 +696,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '-DHAVE_IF_NETS_H=1', '-DHAVE_NET_ETHERNET_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_79f849e1774b3cde8897857e178c7c8c/testbuild/test.cpp.1.o -> build/.conf_check_79f849e1774b3cde8897857e178c7c8c/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_79f849e1774b3cde8897857e178c7c8c/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_79f849e1774b3cde8897857e178c7c8c/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for header netpacket/packet.h
@@ -640,7 +714,7 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '-DHAVE_IF_NETS_H=1', '-DHAVE_NET_ETHERNET_H=1', '-DHAVE_IF_TUN_H=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_f00bb2460dc7019f64c1a347be5879fa/testbuild/test.cpp.1.o -> build/.conf_check_f00bb2460dc7019f64c1a347be5879fa/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_f00bb2460dc7019f64c1a347be5879fa/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_f00bb2460dc7019f64c1a347be5879fa/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
 ------------------------------------------------------------------------------------------------
 Checking for NSC location
@@ -667,8 +741,26 @@ int main(int argc, char **argv) {
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '-DHAVE_IF_NETS_H=1', '-DHAVE_NET_ETHERNET_H=1', '-DHAVE_PACKET_H=1', '-DHAVE_SQLITE3=1', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_79f849e1774b3cde8897857e178c7c8c/testbuild/test.cpp.1.o -> build/.conf_check_79f849e1774b3cde8897857e178c7c8c/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_79f849e1774b3cde8897857e178c7c8c/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_79f849e1774b3cde8897857e178c7c8c/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 yes
+------------------------------------------------------------------------------------------------
+Python module gtk
+['/usr/bin/python', '-c', "\nimport gtk as current_module\nversion = getattr(current_module, '__version__', None)\nif version is not None:\n    print(str(version))\nelse:\n    print('unknown version')\n"]
+out: unknown version
+
+ok
+------------------------------------------------------------------------------------------------
+Python module goocanvas
+['/usr/bin/python', '-c', "\nimport goocanvas as current_module\nversion = getattr(current_module, '__version__', None)\nif version is not None:\n    print(str(version))\nelse:\n    print('unknown version')\n"]
+out: 0.14.1
+
+0.14.1
+------------------------------------------------------------------------------------------------
+Python module pygraphviz
+['/usr/bin/python', '-c', "\nimport pygraphviz as current_module\nversion = getattr(current_module, '__version__', None)\nif version is not None:\n    print(str(version))\nelse:\n    print('unknown version')\n"]
+out: 1.1
+
+1.1
 ------------------------------------------------------------------------------------------------
 Checking for program sudo
 /usr/bin/sudo
@@ -695,7 +787,7 @@ int main() { return 0; }
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-Wno-error=deprecated-declarations', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '-DHAVE_IF_NETS_H=1', '-DHAVE_NET_ETHERNET_H=1', '-DHAVE_PACKET_H=1', '-DHAVE_SQLITE3=1', '-DHAVE_IF_TUN_H=1', '-DHAVE_GSL=1', '../test.cc', '-c', '-o', 'test.cc.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 ok
 ------------------------------------------------------------------------------------------------
 Checking for compilation flag -Wno-error=deprecated-d... support
@@ -709,7 +801,7 @@ int main() { return 0; }
 ['/usr/bin/gcc', '-Wno-error=deprecated-declarations', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '-DHAVE_IF_NETS_H=1', '-DHAVE_NET_ETHERNET_H=1', '-DHAVE_PACKET_H=1', '-DHAVE_SQLITE3=1', '-DHAVE_IF_TUN_H=1', '-DHAVE_GSL=1', '../test.c', '-c', '-o', 'test.c.1.o']
 [2/2] [33mcprogram: build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/test.c.1.o -> build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog
 [0m
-['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 ok
 ------------------------------------------------------------------------------------------------
 Checking for compilation flag -fstrict-aliasing... support
@@ -723,7 +815,7 @@ int main() { return 0; }
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-Wno-error=deprecated-declarations', '-fstrict-aliasing', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '-DHAVE_IF_NETS_H=1', '-DHAVE_NET_ETHERNET_H=1', '-DHAVE_PACKET_H=1', '-DHAVE_SQLITE3=1', '-DHAVE_IF_TUN_H=1', '-DHAVE_GSL=1', '../test.cc', '-c', '-o', 'test.cc.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 ok
 ------------------------------------------------------------------------------------------------
 Checking for compilation flag -fstrict-aliasing... support
@@ -737,7 +829,7 @@ int main() { return 0; }
 ['/usr/bin/gcc', '-fstrict-aliasing', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '-DHAVE_IF_NETS_H=1', '-DHAVE_NET_ETHERNET_H=1', '-DHAVE_PACKET_H=1', '-DHAVE_SQLITE3=1', '-DHAVE_IF_TUN_H=1', '-DHAVE_GSL=1', '../test.c', '-c', '-o', 'test.c.1.o']
 [2/2] [33mcprogram: build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/test.c.1.o -> build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog
 [0m
-['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 ok
 ------------------------------------------------------------------------------------------------
 Checking for compilation flag -Wstrict-aliasing... support
@@ -751,7 +843,7 @@ int main() { return 0; }
 ['/usr/bin/g++', '-O0', '-ggdb', '-g3', '-Wall', '-Werror', '-Wno-error=deprecated-declarations', '-fstrict-aliasing', '-Wstrict-aliasing', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '-DHAVE_IF_NETS_H=1', '-DHAVE_NET_ETHERNET_H=1', '-DHAVE_PACKET_H=1', '-DHAVE_SQLITE3=1', '-DHAVE_IF_TUN_H=1', '-DHAVE_GSL=1', '../test.cc', '-c', '-o', 'test.cc.1.o']
 [2/2] [33mcxxprogram: build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/test.cc.1.o -> build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog
 [0m
-['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/g++', 'test.cc.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_fe0ca542f39064c5a14ee41a2e983996/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 ok
 ------------------------------------------------------------------------------------------------
 Checking for compilation flag -Wstrict-aliasing... support
@@ -765,10 +857,10 @@ int main() { return 0; }
 ['/usr/bin/gcc', '-Wstrict-aliasing', '-DNS3_ASSERT_ENABLE', '-DNS3_LOG_ENABLE', '-DHAVE_SYS_IOCTL_H=1', '-DHAVE_IF_NETS_H=1', '-DHAVE_NET_ETHERNET_H=1', '-DHAVE_PACKET_H=1', '-DHAVE_SQLITE3=1', '-DHAVE_IF_TUN_H=1', '-DHAVE_GSL=1', '../test.c', '-c', '-o', 'test.c.1.o']
 [2/2] [33mcprogram: build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/test.c.1.o -> build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog
 [0m
-['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/zwz/ns-allinone-3.22/ns-3.22/build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
+['/usr/bin/gcc', 'test.c.1.o', '-o', '/home/zwz/ns-3.22/ns-3.22/build/.conf_check_d8a2c40aecfb7c8eac7dd03fcbfb1110/testbuild/testprog', '-Wl,-Bstatic', '-Wl,-Bdynamic']
 ok
 ------------------------------------------------------------------------------------------------
 Checking for program doxygen
 not found
 find program=['doxygen'] paths=['/usr/lib/lightdm/lightdm', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games'] var='DOXYGEN' -> ''
-from /home/zwz/ns-allinone-3.22/ns-3.22: Could not find the program doxygen
+from /home/zwz/ns-3.22/ns-3.22: Could not find the program doxygen

@@ -147,6 +147,14 @@ public:
    */
   void SetStbc (bool stbc);
 
+  /**
+   * Sets transmit power
+   */
+  void SetTxPower (int8_t power);
+
+  int8_t GetTxPower (void) const;
+
+  bool isPowerDbm (void) const;
   
 private:
 
@@ -156,6 +164,8 @@ private:
   uint8_t  m_txPowerLevel;  /**< The TXPWR_LEVEL parameter in Table 15-4. 
                            It is the value that will be passed
                            to PMD_TXPWRLVL.request */ 
+  int8_t  m_txPower;
+                        
   uint8_t  m_retries;      /**< The DATA_RETRIES/RTS_RETRIES parameter
                            for Click radiotap information */
   bool     m_shortGuardInterval; /**< true if short GI is going to be used */
@@ -165,7 +175,8 @@ private:
 
   bool     m_modeInitialized; //*< Internal initialization flag */
   bool     m_txPowerLevelInitialized; //*< Internal initialization flag */
-
+  bool     m_usePowerDbm;
+  //double   testdata;
 };
 
 /**

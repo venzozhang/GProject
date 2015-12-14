@@ -31,7 +31,8 @@ WifiTxVector::WifiTxVector ()
     m_ness (0),
     m_stbc (false),
     m_modeInitialized (false),
-    m_txPowerLevelInitialized (false)
+    m_txPowerLevelInitialized (false),
+    m_usePowerDbm (false)                                                
 {
 }
 
@@ -45,7 +46,8 @@ WifiTxVector::WifiTxVector (WifiMode mode, uint8_t powerLevel, uint8_t retries,
     m_ness(ness),
     m_stbc(stbc),
     m_modeInitialized (true),
-    m_txPowerLevelInitialized (true)
+    m_txPowerLevelInitialized (true),
+    m_usePowerDbm (false)
 {
 }
 
@@ -129,6 +131,26 @@ void
 WifiTxVector::SetStbc (bool stbc)
 {
   m_stbc=stbc;
+}
+void
+WifiTxVector::SetTxPower (int8_t power)
+{
+  m_txPower = power;
+  m_usePowerDbm = true;
+}
+int8_t
+WifiTxVector::GetTxPower (void) const
+{
+  if (m_usePowerDbm == false)
+  {
+    NS_FATAL_ERROR ("WifiTxVector txPower must be set before using");
+  }
+  return m_txPower;
+}
+bool
+WifiTxVector::isPowerDbm (void) const
+{
+  return m_usePowerDbm;
 }
 
 std::ostream & operator << ( std::ostream &os, const WifiTxVector &v)

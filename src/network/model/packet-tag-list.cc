@@ -255,6 +255,7 @@ PacketTagList::Add (const Tag &tag) const
   head->tid = tag.GetInstanceTypeId ();
   head->next = m_next;
   NS_ASSERT (tag.GetSerializedSize () <= TagData::MAX_SIZE);
+
   tag.Serialize (TagBuffer (head->data, head->data + tag.GetSerializedSize ()));
 
   const_cast<PacketTagList *> (this)->m_next = head;

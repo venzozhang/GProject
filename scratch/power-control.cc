@@ -302,8 +302,8 @@ SetChannel(void)
   waveChannel.AddPropagationLoss ("ns3::TwoRayGroundPropagationLossModel");
   YansWavePhyHelper wavePhy =  YansWavePhyHelper::Default ();
   wavePhy.Set("TxPowerLevels", UintegerValue (9));
-  wavePhy.Set("TxPowerStart",  DoubleValue (10));
-  wavePhy.Set("TxPowerEnd",  DoubleValue (40));
+  wavePhy.Set("TxPowerStart",  DoubleValue (-20));
+  wavePhy.Set("TxPowerEnd",  DoubleValue (30));
   wavePhy.Set("ChannelNumber",  UintegerValue (CCH));
   wavePhy.SetChannel (waveChannel.Create ());
   wavePhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11);
@@ -493,7 +493,7 @@ SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
   uint8_t txPowerLevel = sender->CalculateTxPower();
-  TxInfo info = TxInfo (channelNumber, 7, wave_mode, txPowerLevel);  
+  TxInfo info = TxInfo (channelNumber, 7, wave_mode, txPowerLevel, 20);  
   std::cout << "nodeID: " << sender->GetNode()->GetId() << " tx power level: " << (uint32_t)txPowerLevel << std::endl;
   sender->SendX (packet, dest, WSMP_PROT_NUMBER, info);
   

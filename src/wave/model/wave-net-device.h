@@ -59,19 +59,22 @@ struct TxInfo
   uint32_t priority;
   WifiMode dataRate;
   uint32_t txPowerLevel;
+  int8_t txPower;          //transmit power(dbm)
   // Time expiryTime;   // unsupported
   TxInfo ()
     : channelNumber (CCH),
       priority (7),
-      txPowerLevel (8)
+      txPowerLevel (8),
+      txPower(0)
   {
 
   }
-  TxInfo (uint32_t channel, uint32_t prio = 7, WifiMode rate = WifiMode (), uint32_t powerLevel = 8)
+  TxInfo (uint32_t channel, uint32_t prio = 7, WifiMode rate = WifiMode (), uint32_t powerLevel = 8, int8_t power = 0)
     : channelNumber (channel),
       priority (prio),
       dataRate (rate),
-      txPowerLevel (powerLevel)
+      txPowerLevel (powerLevel),
+      txPower (power)
   {
 
   }

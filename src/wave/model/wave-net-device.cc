@@ -416,6 +416,7 @@ WaveNetDevice::SendX (Ptr<Packet> packet, const Address & dest, uint32_t protoco
       //std::cout << "set power level" << std::endl;
       txVector.SetTxPowerLevel (txInfo.txPowerLevel);
       txVector.SetMode (txInfo.dataRate);
+      txVector.SetTxPower (txInfo.txPower);
       HigherLayerTxVectorTag tag = HigherLayerTxVectorTag (txVector, false);
       packet->AddPacketTag (tag);
     }

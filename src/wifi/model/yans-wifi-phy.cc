@@ -692,11 +692,20 @@ YansWifiPhy::SendPacket (Ptr<const Packet> packet, WifiTxVector txVector, WifiPr
     {
       dataRate500KbpsUnits = txVector.GetMode().GetDataRate () * txVector.GetNss() / 500000;
     }
+  double txPower;
+  if (txVector.isPowerDbm() == true)
+  {
+    txPower = (double)txVector.GetTxPower();
+  }
+  else
+  {
+    txPower = GetPowerDbm(txVector.GetTxPowerLevel());
+  }
   bool isShortPreamble = (WIFI_PREAMBLE_SHORT == preamble);
   NotifyMonitorSniffTx (packet, (uint16_t)GetChannelFrequencyMhz (), GetChannelNumber (), dataRate500KbpsUnits, isShortPreamble, txVector.GetTxPowerLevel());
-  std::cout <<"power level:"<< (int)txVector.GetTxPowerLevel() << " power:" << GetPowerDbm (txVector.GetTxPowerLevel()) << std::endl;
-  m_state->SwitchToTx (txDuration, packet, GetPowerDbm (txVector.GetTxPowerLevel()), txVector, preamble);
-  m_channel->Send (this, packet, GetPowerDbm (txVector.GetTxPowerLevel()) + m_txGainDb, txVector, preamble, packetType, txDuration);
+  //std::cout <<"power level:"<< (int)txVector.GetTxPowerLevel() << " power:" << GetPowerDbm (txVector.GetTxPowerLevel()) << std::endl;
+  m_state->SwitchToTx (txDuration, packet, txPower, txVector, preamble);
+  m_channel->Send (this, packet, txPower + m_txGainDb, txVector, preamble, packetType, txDuration);
 }
 
 uint32_t
