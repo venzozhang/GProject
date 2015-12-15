@@ -492,9 +492,10 @@ SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
                                      4);  
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
-  uint8_t txPowerLevel = sender->CalculateTxPower();
-  TxInfo info = TxInfo (channelNumber, 7, wave_mode, txPowerLevel, 20);  
-  std::cout << "nodeID: " << sender->GetNode()->GetId() << " tx power level: " << (uint32_t)txPowerLevel << std::endl;
+  uint8_t txPower = sender->CalculateTxPower();
+  txPower = now.GetSeconds();
+  TxInfo info = TxInfo (channelNumber, 7, wave_mode, 0, txPower);  
+  std::cout << "nodeID: " << sender->GetNode()->GetId() << " time: "<< now.GetMicroSeconds() << " txPower " << (int32_t)txPower << std::endl;
   sender->SendX (packet, dest, WSMP_PROT_NUMBER, info);
   
 
@@ -631,7 +632,7 @@ main()
    //delta = 1000/100;
   // Run();
   //delta = 1000/200;
-  delta = 600;
+  delta = 3000;
   Run();
 }
  

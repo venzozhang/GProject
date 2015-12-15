@@ -705,6 +705,7 @@ YansWifiPhy::SendPacket (Ptr<const Packet> packet, WifiTxVector txVector, WifiPr
   NotifyMonitorSniffTx (packet, (uint16_t)GetChannelFrequencyMhz (), GetChannelNumber (), dataRate500KbpsUnits, isShortPreamble, txVector.GetTxPowerLevel());
   //std::cout <<"power level:"<< (int)txVector.GetTxPowerLevel() << " power:" << GetPowerDbm (txVector.GetTxPowerLevel()) << std::endl;
   m_state->SwitchToTx (txDuration, packet, txPower, txVector, preamble);
+  std::cout << "phy power: " << txPower << std::endl;
   m_channel->Send (this, packet, txPower + m_txGainDb, txVector, preamble, packetType, txDuration);
 }
 
