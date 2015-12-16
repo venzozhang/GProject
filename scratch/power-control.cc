@@ -54,14 +54,14 @@ class StatsTag : public Tag
 {
 public:
   StatsTag (void)
-    : m_packetId (0),
+    : m_nodeId (0),
       m_sendTime (Seconds (0)),
       m_posX (0),
       m_posY (0)
   {
   }
-  StatsTag (uint32_t packetId, Time sendTime, double posX, double posY)
-    : m_packetId (packetId),
+  StatsTag (uint32_t nodeId, Time sendTime, double posX, double posY)
+    : m_nodeId (nodeId),
       m_sendTime (sendTime),
       m_posX (posX),
       m_posY (posY)
@@ -71,9 +71,9 @@ public:
   {
   }
 
-  uint32_t GetPacketId (void)
+  uint32_t GetNodeId (void)
   {
-    return m_packetId;
+    return m_nodeId;
   }
 
   Time GetSendTime (void)
@@ -96,7 +96,7 @@ public:
   virtual void Print (std::ostream &os) const;
 
 private:
-  uint32_t m_packetId;
+  uint32_t m_nodeId;
   Time m_sendTime;
   double m_posX;
   double m_posY;
@@ -123,7 +123,7 @@ StatsTag::GetSerializedSize (void) const
 void
 StatsTag::Serialize (TagBuffer i) const
 {
-  i.WriteU32 (m_packetId);
+  i.WriteU32 (m_nodeId);
   i.WriteU64 (m_sendTime.GetMicroSeconds ());
   i.WriteU64 (m_posX);
   i.WriteU64 (m_posY);
@@ -131,7 +131,7 @@ StatsTag::Serialize (TagBuffer i) const
 void
 StatsTag::Deserialize (TagBuffer i)
 {
-  m_packetId = i.ReadU32 ();
+  m_nodeId = i.ReadU32 ();
   m_sendTime = MicroSeconds (i.ReadU64 ());
   m_posX = i.ReadU64 ();
   m_posY = i.ReadU64 ();
@@ -139,7 +139,7 @@ StatsTag::Deserialize (TagBuffer i)
 void
 StatsTag::Print (std::ostream &os) const
 {
-  os << "packet=" << m_packetId << " sendTime=" << m_sendTime
+  os << "node=" << m_nodeId << " sendTime=" << m_sendTime
      << " posX:" << m_posX << " posY:" << m_posY;
 }
 
@@ -250,6 +250,8 @@ std::map<double, uint32_t> receiveNum;
 std::map<double, uint32_t> receiversNum;     
 std::map<uint32_t, uint32_t> statsDelay;
 
+std::map<uint32_t, std::map<uint32_t, uint32_t> > receiveStats;
+
 uint32_t receiveTotal;
 uint32_t queueSafety;
 uint64_t timeSafety;        
@@ -261,7 +263,7 @@ std::string sumoData;
 void
 Init ()
 {
-  nodesNumber = 0;
+  nodesNumber = 5000 / delta;
   //nodesNumber = 200;
   frequencySafety = 10;         // 10Hz, 100ms send one safety packet
   simulationTime = 10;          // make it run 100s
@@ -272,23 +274,19 @@ Init ()
   timeSafety = 0;
   //sumoData = "highway.mobility.tcl";
   //traceFile = "state.log"; 
-}
+  for (uint32_t i=0; i<nodesNumber; ++i)
+  {
+    for (uint32_t j=0; j<nodesNumber; ++j)
+    {
+      if (i == j)
+      {
+        continue;
+      }
+      receiveStats[i][j] = 0;
+    }
+  }
 
-/************************************************************************
-* When vehicle changes it's state(velocity and position),this function 
-* will write this information to traceFile.
-*************************************************************************/
-// static void
-// CourseChange (std::ostream *os, std::string foo, Ptr<const MobilityModel> model)
-// {
-//   Ptr<Node> node = model->GetObject<Node> ();
-//   Vector pos = model->GetPosition ();          // Get position
-//   Vector vel = model->GetVelocity ();          // Get velocity
-//   *os <<"Time :"<<Now().GetMilliSeconds()
-//       <<", NodeID: "<< node->GetId() 
-//       << ", position:" << pos 
-//       << ", velocity:"<< vel << std::endl;
-// }
+}
 
 
 /************************************************************************
@@ -344,7 +342,7 @@ CreateWaveNodes (void)
     int d = delta;
     if(x%d == 0)
     {
-      ++nodesNumber;
+      //++nodesNumber;
       //std::cout << x << " " << ++j << std::endl;
       positionAlloc->Add (Vector (x, 0.0, 0.0));
     }
@@ -405,6 +403,24 @@ CreateWaveNodes (void)
 }
 
 
+void
+CalculateTxPower ()
+{
+  for (uint32_t i=0; i<nodesNumber; ++i)
+  {
+    for (uint32_t j=0; j<nodesNumber; ++j)
+    {
+      if (i == j)
+      {
+        continue;
+      }
+      Time now = Now ();
+      
+      std::cout <<"time:" << now.GetSeconds() << " node " << i << " receive "<< j << ": " << receiveStats[i][j] << std::endl;
+      receiveStats[i][j] = 0;
+    }
+  }
+}
 
 /***************************************************************************
 * Receive a packet. To calculate PRR,receiveTotal++ when function is called 
@@ -418,6 +434,8 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   StatsTag tag;
   double delay;
   bool result;
+  uint32_t src_id;
+  uint32_t dest_id;
   result = pkt->FindFirstMatchingByteTag (tag);
   if (!result)
   {
@@ -436,6 +454,10 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   Ptr<MobilityModel> model = node->GetObject<MobilityModel> ();
   Vector dest_pos = model->GetPosition ();
    // std::cout << src_pos << " 2" << std::endl;
+
+  src_id = tag.GetNodeId();
+  dest_id = node->GetId();
+  receiveStats[dest_id][src_id]++;
 
   if((src_pos.x <= 4000) && (src_pos.x >= 1000))
   {  
@@ -493,9 +515,9 @@ SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
   uint8_t txPower = sender->CalculateTxPower();
-  txPower = now.GetSeconds();
+  txPower = 100;
   TxInfo info = TxInfo (channelNumber, 7, wave_mode, 0, txPower);  
-  std::cout << "nodeID: " << sender->GetNode()->GetId() << " time: "<< now.GetMicroSeconds() << " txPower " << (int32_t)txPower << std::endl;
+  //std::cout << "nodeID: " << sender->GetNode()->GetId() << " time: "<< now.GetMicroSeconds() << " txPower " << (int32_t)txPower << std::endl;
   sender->SendX (packet, dest, WSMP_PROT_NUMBER, info);
   
 
@@ -539,6 +561,10 @@ Configuration (void)
     
     for (uint32_t time = 0; time != simulationTime; ++time)
     {
+      if (time != 0)
+      {
+        Simulator::Schedule (Seconds (time), CalculateTxPower);
+      }
       for (uint32_t sends = 0; sends != frequencySafety; ++sends)
       {
         //Simulator::Schedule (Seconds (time), CalculateTxPower, sender, CCH);   
@@ -632,7 +658,7 @@ main()
    //delta = 1000/100;
   // Run();
   //delta = 1000/200;
-  delta = 3000;
+  delta = 200;
   Run();
 }
  
