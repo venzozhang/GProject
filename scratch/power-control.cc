@@ -46,6 +46,8 @@
 #include "ns3/yans-wifi-phy.h"
 #include "ns3/seq-ts-header.h"
 
+#define LAMBDA 0.01
+
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("highway-static");
@@ -251,6 +253,9 @@ std::map<double, uint32_t> receiversNum;
 std::map<uint32_t, uint32_t> statsDelay;
 
 std::map<uint32_t, std::map<uint32_t, uint32_t> > receiveStats;
+std::map<Ptr<Node>, std::map<Ptr<Node>, uint32_t> > receiveStat;
+std::map<Ptr<Node>, std::list<double> > receiveDistance;
+std::map<Ptr<Node>, double> nodeDensity;
 
 uint32_t receiveTotal;
 uint32_t queueSafety;
@@ -274,16 +279,34 @@ Init ()
   timeSafety = 0;
   //sumoData = "highway.mobility.tcl";
   //traceFile = "state.log"; 
-  for (uint32_t i=0; i<nodesNumber; ++i)
+  // for (uint32_t i=0; i<nodesNumber; ++i)
+  // {
+  //   for (uint32_t j=0; j<nodesNumber; ++j)
+  //   {
+  //     if (i == j)
+  //     {
+  //       continue;
+  //     }
+  //     receiveStats[i][j] = 0;
+  //   }
+  // }
+  // for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+  // {
+  //   for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
+  //   {
+  //     if (i == j)
+  //     {
+  //       continue;
+  //     }
+  //     Ptr<Node> receiveNode = (*i);
+  //     Ptr<Node> sendNode = (*j);
+  //     receiveStat[receiveNode][sendNode] = 0;
+  //   }
+  // }
+  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
-    for (uint32_t j=0; j<nodesNumber; ++j)
-    {
-      if (i == j)
-      {
-        continue;
-      }
-      receiveStats[i][j] = 0;
-    }
+    Ptr<Node> node = *i;
+    nodeDensity[node] = 0;
   }
 
 }
@@ -406,19 +429,57 @@ CreateWaveNodes (void)
 void
 CalculateTxPower ()
 {
-  for (uint32_t i=0; i<nodesNumber; ++i)
-  {
-    for (uint32_t j=0; j<nodesNumber; ++j)
-    {
-      if (i == j)
-      {
-        continue;
-      }
-      Time now = Now ();
+  Time now = Now (); 
+  std::cout << "Time: " << now.GetSeconds() << "s" << std::endl;
+  // for (uint32_t i=0; i<nodesNumber; ++i)
+  // {
+  //   for (uint32_t j=0; j<nodesNumber; ++j)
+  //   {
+  //     if (i == j)
+  //     {
+  //       continue;
+  //     }
       
-      std::cout <<"time:" << now.GetSeconds() << " node " << i << " receive "<< j << ": " << receiveStats[i][j] << std::endl;
-      receiveStats[i][j] = 0;
+      
+  //     //std::cout <<"time:" << now.GetSeconds() << " node " << i << " receive "<< j << ": " << receiveStats[i][j] << std::endl;
+  //     receiveStats[i][j] = 0;
+  //   }
+  // }
+
+  // for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+  // {
+  //   for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
+  //   {
+  //     if (i == j)
+  //     {
+  //       continue;
+  //     }
+  //     Ptr<Node> receiveNode = (*i);
+  //     Ptr<Node> sendNode = (*j);
+  //     std::cout <<"time:" << now.GetSeconds() << " node " << receiNode->GetId() << " receive "<< sendNode->GetId() << ": " << receiveStat[receiveNode][sendNode] << std::endl;
+  //     receiveStat[receiveNode][sendNode] = 0;
+  //   }
+  // }
+  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+  {
+    Ptr<Node> receiveNode = (*i);
+    int kk = 0;
+    int tt = 0;
+    double disMean = 0;
+    for(std::list<double>::iterator j = receiveDistance[receiveNode].begin(); j != receiveDistance[receiveNode].end(); ++j)
+    {
+      double distance = *j;
+      double dd = LAMBDA / distance ;
+      nodeDensity[receiveNode] += dd;
+      kk++;
+      tt += distance;
     }
+    disMean = tt / kk;
+    std::cout << disMean << std::endl;
+    nodeDensity[receiveNode] *= (disMean);
+    std::cout <<"time:" << now.GetSeconds() << " node: " << receiveNode->GetId() << " local density:" << nodeDensity[receiveNode] << std::endl;
+    receiveDistance[receiveNode].clear();
+    nodeDensity[receiveNode] = 0;
   }
 }
 
@@ -434,8 +495,8 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   StatsTag tag;
   double delay;
   bool result;
-  uint32_t src_id;
-  uint32_t dest_id;
+  //uint32_t src_id;
+  //uint32_t dest_id;
   result = pkt->FindFirstMatchingByteTag (tag);
   if (!result)
   {
@@ -455,9 +516,10 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   Vector dest_pos = model->GetPosition ();
    // std::cout << src_pos << " 2" << std::endl;
 
-  src_id = tag.GetNodeId();
-  dest_id = node->GetId();
-  receiveStats[dest_id][src_id]++;
+  // src_id = tag.GetNodeId();
+  // dest_id = node->GetId();
+  // receiveStats[dest_id][src_id]++;
+  receiveDistance[node].push_back(CalculateDistance (dest_pos, src_pos));
 
   if((src_pos.x <= 4000) && (src_pos.x >= 1000))
   {  
@@ -493,7 +555,7 @@ SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
   Ptr<Node> src = sender->GetNode();
   Ptr<MobilityModel> model_src = src->GetObject<MobilityModel> ();                     
   Vector src_pos = model_src->GetPosition (); 
-  StatsTag tag = StatsTag (safetyPacketID, now, src_pos.x, src_pos.y);
+  StatsTag tag = StatsTag (src->GetId(), now, src_pos.x, src_pos.y);
   /////////////////////////std::cout << channelNumber << std::endl;
   packet->AddByteTag (tag);
   if((src_pos.x <= 4000) && (src_pos.x >= 1000))
@@ -515,7 +577,7 @@ SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
   uint8_t txPower = sender->CalculateTxPower();
-  txPower = 100;
+  txPower = 20;
   TxInfo info = TxInfo (channelNumber, 7, wave_mode, 0, txPower);  
   //std::cout << "nodeID: " << sender->GetNode()->GetId() << " time: "<< now.GetMicroSeconds() << " txPower " << (int32_t)txPower << std::endl;
   sender->SendX (packet, dest, WSMP_PROT_NUMBER, info);
@@ -560,11 +622,9 @@ Configuration (void)
     Ptr<WaveNetDevice> sender = DynamicCast<WaveNetDevice> (*i);
     
     for (uint32_t time = 0; time != simulationTime; ++time)
-    {
-      if (time != 0)
-      {
-        Simulator::Schedule (Seconds (time), CalculateTxPower);
-      }
+    {   
+       // Simulator::Schedule (Seconds (time), CalculateTxPower);
+      
       for (uint32_t sends = 0; sends != frequencySafety; ++sends)
       {
         //Simulator::Schedule (Seconds (time), CalculateTxPower, sender, CCH);   
@@ -572,6 +632,11 @@ Configuration (void)
       }
       
     }
+  }
+  for (uint32_t time = 1; time <= simulationTime; ++time)
+  {
+    
+      Simulator::Schedule (Seconds (time), CalculateTxPower);
   }
 
 }
@@ -658,7 +723,7 @@ main()
    //delta = 1000/100;
   // Run();
   //delta = 1000/200;
-  delta = 200;
+  delta = 50;
   Run();
 }
  
