@@ -46,7 +46,7 @@
 #include "ns3/yans-wifi-phy.h"
 #include "ns3/seq-ts-header.h"
 
-#define LAMBDA 0.01
+#define LAMBDA 1
 
 using namespace ns3;
 
@@ -320,7 +320,9 @@ SetChannel(void)
 {
   YansWifiChannelHelper waveChannel;// = YansWifiChannelHelper::Default ();
   waveChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-  waveChannel.AddPropagationLoss ("ns3::TwoRayGroundPropagationLossModel");
+  waveChannel.AddPropagationLoss ("ns3::TwoRayGroundPropagationLossModel",
+                            "Frequency", DoubleValue (5.89e9),
+                            "HeightAboveZ", DoubleValue (0.5));
   YansWavePhyHelper wavePhy =  YansWavePhyHelper::Default ();
   wavePhy.Set("TxPowerLevels", UintegerValue (9));
   wavePhy.Set("TxPowerStart",  DoubleValue (-20));
@@ -469,12 +471,14 @@ CalculateTxPower ()
     for(std::list<double>::iterator j = receiveDistance[receiveNode].begin(); j != receiveDistance[receiveNode].end(); ++j)
     {
       double distance = *j;
-      double dd = LAMBDA / distance ;
+      double dd = LAMBDA / distance;
       nodeDensity[receiveNode] += dd;
       kk++;
       tt += distance;
     }
+    //std::cout << "a" << std::endl;
     disMean = tt / kk;
+    //std::cout << "b" << std::endl;
     std::cout << disMean << std::endl;
     nodeDensity[receiveNode] *= (disMean);
     std::cout <<"time:" << now.GetSeconds() << " node: " << receiveNode->GetId() << " local density:" << nodeDensity[receiveNode] << std::endl;
@@ -723,7 +727,7 @@ main()
    //delta = 1000/100;
   // Run();
   //delta = 1000/200;
-  delta = 50;
+  delta = 10;
   Run();
 }
  
