@@ -47,6 +47,8 @@
 #include "ns3/seq-ts-header.h"
 
 #define LAMBDA 1
+#define MAXLEN 620
+const double e = 2.718281828459;
 
 using namespace ns3;
 
@@ -244,6 +246,8 @@ Ptr<UniformRandomVariable> rngSafety;
 Ptr<UniformRandomVariable> rngOther;
 Ptr<UniformRandomVariable> rngNodes;
 uint32_t safetyPacketID;
+
+uint8_t txPower;
   // we will check whether the packet is received by the neighbors
   // in the transmission range
 
@@ -256,6 +260,7 @@ std::map<uint32_t, std::map<uint32_t, uint32_t> > receiveStats;
 std::map<Ptr<Node>, std::map<Ptr<Node>, uint32_t> > receiveStat;
 std::map<Ptr<Node>, std::list<double> > receiveDistance;
 std::map<Ptr<Node>, double> nodeDensity;
+//std::map<uint32_t, uint32_t> coverArea;
 
 uint32_t receiveTotal;
 uint32_t queueSafety;
@@ -303,11 +308,15 @@ Init ()
   //     receiveStat[receiveNode][sendNode] = 0;
   //   }
   // }
+  txPower = 30;
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> node = *i;
     nodeDensity[node] = 0;
   }
+  // coverArea[10] = 200;
+  // coverArea[20] = 350;
+  // coverArea[30] = 620;
 
 }
 
@@ -467,20 +476,27 @@ CalculateTxPower ()
     Ptr<Node> receiveNode = (*i);
     int kk = 0;
     int tt = 0;
+    //
+    
     double disMean = 0;
+    // double distanceMax;
+    // receiveDistance[receiveNode].sort();
+    // distanceMax = receiveDistance[receiveNode].back();
+    // std::cout <<"max: "<< distanceMax << std::endl;
     for(std::list<double>::iterator j = receiveDistance[receiveNode].begin(); j != receiveDistance[receiveNode].end(); ++j)
     {
       double distance = *j;
-      double dd = LAMBDA / distance;
+      double dd = LAMBDA * (pow(e, (1 - distance / MAXLEN))-1);
       nodeDensity[receiveNode] += dd;
       kk++;
       tt += distance;
+      //std::cout << distance << std::endl;
     }
     //std::cout << "a" << std::endl;
     disMean = tt / kk;
     //std::cout << "b" << std::endl;
     std::cout << disMean << std::endl;
-    nodeDensity[receiveNode] *= (disMean);
+    //nodeDensity[receiveNode] += (LAMBDA / disMean);
     std::cout <<"time:" << now.GetSeconds() << " node: " << receiveNode->GetId() << " local density:" << nodeDensity[receiveNode] << std::endl;
     receiveDistance[receiveNode].clear();
     nodeDensity[receiveNode] = 0;
@@ -580,8 +596,8 @@ SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
                                      4);  
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
-  uint8_t txPower = sender->CalculateTxPower();
-  txPower = 20;
+  //uint8_t txPower = sender->CalculateTxPower();
+  //txPower = 30;
   TxInfo info = TxInfo (channelNumber, 7, wave_mode, 0, txPower);  
   //std::cout << "nodeID: " << sender->GetNode()->GetId() << " time: "<< now.GetMicroSeconds() << " txPower " << (int32_t)txPower << std::endl;
   sender->SendX (packet, dest, WSMP_PROT_NUMBER, info);
@@ -727,7 +743,7 @@ main()
    //delta = 1000/100;
   // Run();
   //delta = 1000/200;
-  delta = 10;
+  delta = 50;
   Run();
 }
  
