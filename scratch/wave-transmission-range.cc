@@ -77,7 +77,7 @@ GetTransmissionRange()
 {
   NS_LOG_UNCOND ("calculating transmission range...");
   bool stop = false;
-  TestRange = 100;
+  TestRange = 0;
   while (!stop)
   {
      TestRange += 10.0;
@@ -166,7 +166,7 @@ SendTestPackets()
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
   //uint8_t txPower = sender->CalculateTxPower();
-  uint8_t txPower = 20;
+  uint8_t txPower = 0;
   TxInfo info = TxInfo (CCH, 7, wave_mode, 0, txPower);  
   Ptr<WaveNetDevice> sender = DynamicCast<WaveNetDevice> (devices.Get(0));
   sender->SendX (packet, dest, 0x88DC, info);
@@ -180,6 +180,7 @@ SetChannel(void)
 {
   YansWifiChannelHelper waveChannel;// = YansWifiChannelHelper::Default ();
   waveChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+  //waveChannel.AddPropagationLoss ("ns3::NakagamiPropagationLossModel");
   waveChannel.AddPropagationLoss ("ns3::TwoRayGroundPropagationLossModel",
                             "Frequency", DoubleValue (5.89e9),
                             "HeightAboveZ", DoubleValue (0.5));

@@ -741,7 +741,9 @@ NakagamiPropagationLossModel::DoCalcRxPower (double txPowerDbm,
   NS_LOG_DEBUG ("Nakagami distance=" << distance << "m, " <<
                 "power=" << powerW <<"W, " <<
                 "resultPower=" << resultPowerW << "W=" << resultPowerDbm << "dBm");
-
+  std::cout<< "Nakagami distance=" << distance << "m, " <<
+                "power=" << powerW <<"W, " <<
+                "resultPower=" << resultPowerW << "W=" << resultPowerDbm << "dBm" << std::endl;
   return resultPowerDbm;
 }
 

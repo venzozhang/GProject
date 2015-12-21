@@ -46,7 +46,7 @@
 #include "ns3/yans-wifi-phy.h"
 #include "ns3/seq-ts-header.h"
 
-#define LAMBDA 1
+#define LAMBDA 1000
 #define MAXLEN 620
 const double e = 2.718281828459;
 
@@ -295,20 +295,20 @@ Init ()
   //     receiveStats[i][j] = 0;
   //   }
   // }
-  // for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
-  // {
-  //   for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
-  //   {
-  //     if (i == j)
-  //     {
-  //       continue;
-  //     }
-  //     Ptr<Node> receiveNode = (*i);
-  //     Ptr<Node> sendNode = (*j);
-  //     receiveStat[receiveNode][sendNode] = 0;
-  //   }
-  // }
-  txPower = 30;
+  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+  {
+    for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
+    {
+      if (i == j)
+      {
+        continue;
+      }
+      Ptr<Node> receiveNode = (*i);
+      Ptr<Node> sendNode = (*j);
+      receiveStat[receiveNode][sendNode] = 0;
+    }
+  }
+  txPower = 0;
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> node = *i;
@@ -471,36 +471,67 @@ CalculateTxPower ()
   //     receiveStat[receiveNode][sendNode] = 0;
   //   }
   // }
+  // for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+  // {
+  //   Ptr<Node> receiveNode = (*i);
+  //   int kk = 0;
+  //   int tt = 0;
+  //   //
+    
+  //   double disMean = 0;
+  //   // double distanceMax;
+  //   // receiveDistance[receiveNode].sort();
+  //   // distanceMax = receiveDistance[receiveNode].back();
+  //   // std::cout <<"max: "<< distanceMax << std::endl;
+  //   for(std::list<double>::iterator j = receiveDistance[receiveNode].begin(); j != receiveDistance[receiveNode].end(); ++j)
+  //   {
+  //     double distance = *j;
+  //     double dd = LAMBDA * (pow(e, (1 - distance / MAXLEN))-1);
+  //     nodeDensity[receiveNode] += dd;
+  //     kk++;
+  //     tt += distance;
+  //     //std::cout << distance << std::endl;
+  //   }
+  //   //std::cout << "a" << std::endl;
+  //   disMean = tt / kk;
+  //   //std::cout << "b" << std::endl;
+  //   std::cout << disMean << std::endl;
+  //   //nodeDensity[receiveNode] += (LAMBDA / disMean);
+  //   std::cout <<"time:" << now.GetSeconds() << " node: " << receiveNode->GetId() << " local density:" << nodeDensity[receiveNode] << std::endl;
+  //   receiveDistance[receiveNode].clear();
+  //   nodeDensity[receiveNode] = 0;
+  // }
+
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> receiveNode = (*i);
-    int kk = 0;
-    int tt = 0;
-    //
     
-    double disMean = 0;
-    // double distanceMax;
-    // receiveDistance[receiveNode].sort();
-    // distanceMax = receiveDistance[receiveNode].back();
-    // std::cout <<"max: "<< distanceMax << std::endl;
-    for(std::list<double>::iterator j = receiveDistance[receiveNode].begin(); j != receiveDistance[receiveNode].end(); ++j)
-    {
-      double distance = *j;
-      double dd = LAMBDA * (pow(e, (1 - distance / MAXLEN))-1);
-      nodeDensity[receiveNode] += dd;
-      kk++;
-      tt += distance;
-      //std::cout << distance << std::endl;
-    }
-    //std::cout << "a" << std::endl;
-    disMean = tt / kk;
-    //std::cout << "b" << std::endl;
-    std::cout << disMean << std::endl;
-    //nodeDensity[receiveNode] += (LAMBDA / disMean);
-    std::cout <<"time:" << now.GetSeconds() << " node: " << receiveNode->GetId() << " local density:" << nodeDensity[receiveNode] << std::endl;
+    receiveDistance[receiveNode].sort();
+    double distanceMax = receiveDistance[receiveNode].back();
+    double neighborNum = receiveStat[receiveNode].size();
+    nodeDensity[receiveNode] = LAMBDA * neighborNum / (distanceMax * 2);
+    std::cout << "node id: "<< receiveNode->GetId() << " max distance: " << distanceMax << " neighbors number: " << neighborNum << " local density: " << nodeDensity[receiveNode] << std::endl;
     receiveDistance[receiveNode].clear();
-    nodeDensity[receiveNode] = 0;
+    for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
+    {
+      if (i != j)
+      {
+        Ptr<Node> sendNode = (*j);
+        receiveStat[receiveNode][sendNode] = 0;
+      }
+    }
   }
+  double meanDensity = 0;
+  double total = 0;
+  double ii = 0;
+  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+  {
+    Ptr<Node> receiveNode = (*i);
+    total += nodeDensity[receiveNode];
+    ii++;
+  }
+  meanDensity = total / ii;
+  std::cout << "Mean density: " << meanDensity << std::endl;
 }
 
 /***************************************************************************
@@ -536,9 +567,11 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   Vector dest_pos = model->GetPosition ();
    // std::cout << src_pos << " 2" << std::endl;
 
-  // src_id = tag.GetNodeId();
+  uint32_t src_id = tag.GetNodeId();
+  Ptr<Node> src_node = nodes.Get(src_id);
   // dest_id = node->GetId();
   // receiveStats[dest_id][src_id]++;
+  receiveStat[node][src_node]++;
   receiveDistance[node].push_back(CalculateDistance (dest_pos, src_pos));
 
   if((src_pos.x <= 4000) && (src_pos.x >= 1000))
@@ -743,7 +776,7 @@ main()
    //delta = 1000/100;
   // Run();
   //delta = 1000/200;
-  delta = 50;
+  delta = 5;
   Run();
 }
  
