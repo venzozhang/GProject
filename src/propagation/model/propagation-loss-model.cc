@@ -418,6 +418,7 @@ TwoRayGroundPropagationLossModel::DoCalcRxPower (double txPowerDbm,
 
   double dCross = (4 * M_PI * txAntHeight * rxAntHeight) / m_lambda;
   double tmp = 0;
+  //std::cout << dCross << std::endl;
   if (distance <= dCross)
     {
       // We use Friis

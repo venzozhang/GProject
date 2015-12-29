@@ -521,7 +521,7 @@ YansWifiPhy::StartReceivePacket (Ptr<Packet> packet,
                                  uint8_t packetType, Time rxDuration)
 {
   NS_LOG_FUNCTION (this << packet << rxPowerDbm << txVector.GetMode()<< preamble << (uint32_t)packetType);
-
+  //std::cout << "YansWifiPhy::StartReceivePacket" <<rxPowerDbm<< std::endl;
   AmpduTag ampduTag;
   rxPowerDbm += m_rxGainDb;
   double rxPowerW = DbmToW (rxPowerDbm);
@@ -582,6 +582,8 @@ YansWifiPhy::StartReceivePacket (Ptr<Packet> packet,
     case YansWifiPhy::IDLE:
       if (rxPowerW > m_edThresholdW)
         {
+          
+          //std::cout << 10 * std::log10 (m_edThresholdW) + 30 << " " << 10 * std::log10 (rxPowerW) + 30 << std::endl;
           if (IsModeSupported (txMode) || IsMcsSupported(txMode))
             {
               if (preamble != WIFI_PREAMBLE_NONE && packet->PeekPacketTag (ampduTag) && m_mpdusNum == 0)
@@ -972,7 +974,6 @@ YansWifiPhy::EndReceive (Ptr<Packet> packet, Ptr<InterferenceHelper::Event> even
   NS_LOG_FUNCTION (this << packet << event);
   NS_ASSERT (IsStateRx ());
   NS_ASSERT (event->GetEndTime () == Simulator::Now ());
-
   struct InterferenceHelper::SnrPer snrPer;
   snrPer = m_interference.CalculateSnrPer (event);
   m_interference.NotifyRxEnd ();
