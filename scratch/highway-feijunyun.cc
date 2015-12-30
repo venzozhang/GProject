@@ -31,7 +31,7 @@
 #include "ns3/mobility-model.h"
 #include <iostream>
 #include <algorithm>
-#include <cmath>
+ #include <cmath>
 #include "ns3/string.h"
 #include "ns3/double.h"
 #include "ns3/object-map.h"
@@ -43,14 +43,7 @@
 #include "ns3/wave-helper.h"
 #include "ns3/ns2-mobility-helper.h"
 #include "ns3/core-module.h"
-#include "ns3/yans-wifi-phy.h"
-#include "ns3/seq-ts-header.h"
 
-#define LAMBDA 1000
-#define MAXLEN 620
-#define THRESHOLD 70
-const double e = 2.718281828459;
-const int rxThreshold = -92;
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("highway-static");
@@ -59,14 +52,14 @@ class StatsTag : public Tag
 {
 public:
   StatsTag (void)
-    : m_nodeId (0),
+    : m_packetId (0),
       m_sendTime (Seconds (0)),
       m_posX (0),
       m_posY (0)
   {
   }
-  StatsTag (uint32_t nodeId, Time sendTime, double posX, double posY)
-    : m_nodeId (nodeId),
+  StatsTag (uint32_t packetId, Time sendTime, double posX, double posY)
+    : m_packetId (packetId),
       m_sendTime (sendTime),
       m_posX (posX),
       m_posY (posY)
@@ -76,9 +69,9 @@ public:
   {
   }
 
-  uint32_t GetNodeId (void)
+  uint32_t GetPacketId (void)
   {
-    return m_nodeId;
+    return m_packetId;
   }
 
   Time GetSendTime (void)
@@ -101,7 +94,7 @@ public:
   virtual void Print (std::ostream &os) const;
 
 private:
-  uint32_t m_nodeId;
+  uint32_t m_packetId;
   Time m_sendTime;
   double m_posX;
   double m_posY;
@@ -128,7 +121,7 @@ StatsTag::GetSerializedSize (void) const
 void
 StatsTag::Serialize (TagBuffer i) const
 {
-  i.WriteU32 (m_nodeId);
+  i.WriteU32 (m_packetId);
   i.WriteU64 (m_sendTime.GetMicroSeconds ());
   i.WriteU64 (m_posX);
   i.WriteU64 (m_posY);
@@ -136,7 +129,7 @@ StatsTag::Serialize (TagBuffer i) const
 void
 StatsTag::Deserialize (TagBuffer i)
 {
-  m_nodeId = i.ReadU32 ();
+  m_packetId = i.ReadU32 ();
   m_sendTime = MicroSeconds (i.ReadU64 ());
   m_posX = i.ReadU64 ();
   m_posY = i.ReadU64 ();
@@ -144,7 +137,7 @@ StatsTag::Deserialize (TagBuffer i)
 void
 StatsTag::Print (std::ostream &os) const
 {
-  os << "node=" << m_nodeId << " sendTime=" << m_sendTime
+  os << "packet=" << m_packetId << " sendTime=" << m_sendTime
      << " posX:" << m_posX << " posY:" << m_posY;
 }
 
@@ -187,7 +180,7 @@ NeighborTag::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::NeighborTag")
     .SetParent<Tag> ()
-    .AddConstructor<NeighborTag> ()
+    .AddConstructor<StatsTag> ()
   ;
   return tid;
 }
@@ -216,7 +209,44 @@ NeighborTag::Print (std::ostream &os) const
 {
   os << "num=" << m_num ;
 }
+/***********************************************************************************************************************
+ * (1) We get transportation data from traffic simulation software called
+ * "sumo",which includes position and velocity. This procedure can read a 
+ * ".tcl" file  derived by sumo to realize this function.  
+ * Every vehicle send WSMP packet in constant frequency. This type of packet 
+ * always carry safety messages and it will be broadcasted to neighbor vehicle 
+ * of sender(there will no ACK and retransmission). The default value of send 
+ * frequency is 10Hz and the size is 200 bytes. Users can configure paremeter 
+ * only by edit this script.    
+ *
+ * (2) scenario of this simulation:
+ *________________________________________________________________________________
+ * 
+ *  ==>   ==>      ==>      ==>       ==>     ==>  ==>    ==>    ==>     ==>
+ *--------------------------------------------------------------------------------
+ *    ==>   ==>     ==>      ==>      ==>  ==>     ==>     ==>     ==>      ==>  
+ *________________________________________________________________________________
+ * 
+ * i) This is a highway scenario. It's about 2 km length. "==>" is a vehicle move to right from left.
+ * velocity is 120km/h. This highway only has one direction with two lanes. 
+ * ii) Density of vehicles is determined by sumo. Users can product a group of data to test
+ * performance of the network.
+ * ii) simulation time of sumo software is 100s. However, at the beginning/end of simluation 
+ * time,most of vehicle is just stay at the either end of the road. In addition,simulate 100s will cost plenty of
+ * time(more than 30 hours if the num of vehicle greater than 1000). So,we select 10s to send safety messages and 
+ * test the performace. 
 
+ * (3) The output includes delay,throughput PDR(packet delivery rate) and PRR(packet receive rate).When 
+ * simlutation is stop,some packets may be queued in wave mac queue. These queued packets should not be
+ * used for stats, but here they will be treated as packet loss when we calculate PRR.
+
+ * (4) PDR means packet delivery rate. Only if every nodes in senders' neighbor receive the packet, packet
+ * delivery success. PDR = deliverySuccessNum / (sendSafetyNum - queueSafety). 
+ * PRR means packet receive rate. If a vehicle has 100 neighbors, we treat this broadcast packet as 100 unicast 
+ * packet calculate it's success rate. We can get the PRR when we calculate every vehicles' succeess rate in 
+ * this method. However, if there were still have some packet in the queue until the end of simulation,we couldn't
+ * know the number of the destination of these packets temporary,so we treat as packet loss.
+ ***********************************************************************************************************************/
 
 const static uint16_t WSMP_PROT_NUMBER = 0x88DC;
 
@@ -231,10 +261,10 @@ bool Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Ad
 void Init (int argc, char **argv);
 void InitStats (void);
 void Stats (uint32_t randomNumber);
-//void StatQueuedPackets (void);
-//void StatSingleQueue (Ptr<WaveEdcaTxopN> edca);
+void StatQueuedPackets (void);
+void StatSingleQueue (Ptr<WaveEdcaTxopN> edca);
 void GetPosition(Ptr<Node> node);
-//static void CourseChange (std::ostream *os, std::string foo, Ptr<const MobilityModel> model);
+static void CourseChange (std::ostream *os, std::string foo, Ptr<const MobilityModel> model);
 
 NodeContainer nodes;
 NetDeviceContainer devices; 
@@ -242,13 +272,12 @@ uint32_t nodesNumber;
 uint32_t frequencySafety;
 uint32_t simulationTime;
 uint32_t sizeSafety;
-double delta;
+//double delta;
+double densityIndex;
 Ptr<UniformRandomVariable> rngSafety;
 Ptr<UniformRandomVariable> rngOther;
 Ptr<UniformRandomVariable> rngNodes;
 uint32_t safetyPacketID;
-
-uint8_t txPower;
   // we will check whether the packet is received by the neighbors
   // in the transmission range
 
@@ -256,14 +285,6 @@ uint8_t txPower;
 std::map<double, uint32_t> receiveNum;
 std::map<double, uint32_t> receiversNum;     
 std::map<uint32_t, uint32_t> statsDelay;
-
-std::map<uint32_t, std::map<uint32_t, uint32_t> > receiveStats;
-std::map<Ptr<Node>, std::map<Ptr<Node>, uint32_t> > receiveStat;
-std::map<Ptr<Node>, std::map<Ptr<Node>, double> > receiveDistance;
-std::map<Ptr<Node>, uint32_t> distanceMax;
-std::map<Ptr<Node>, double> nodeDensity;
-std::map<Ptr<Node>, int8_t> nodePower;
-//std::map<uint32_t, uint32_t> coverArea;
 
 uint32_t receiveTotal;
 uint32_t queueSafety;
@@ -276,52 +297,33 @@ std::string sumoData;
 void
 Init ()
 {
-  //nodesNumber = 5000 / delta;
   nodesNumber = 0;
+  //nodesNumber = 200;
   frequencySafety = 10;         // 10Hz, 100ms send one safety packet
-  simulationTime = 10;          // make it run 100s
+  simulationTime = 1;          // make it run 100s
   sizeSafety = 500;             // 100 bytes small size
   safetyPacketID  = 0;
   //receiveSafety  = 0;
   queueSafety = 0;
   timeSafety = 0;
-  //sumoData = "highway.mobility.tcl";
-  //traceFile = "state.log"; 
-  // for (uint32_t i=0; i<nodesNumber; ++i)
-  // {
-  //   for (uint32_t j=0; j<nodesNumber; ++j)
-  //   {
-  //     if (i == j)
-  //     {
-  //       continue;
-  //     }
-  //     receiveStats[i][j] = 0;
-  //   }
-  // }
-  // for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
-  // {
-  //   for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
-  //   {
-  //     if (i == j)
-  //     {
-  //       continue;
-  //     }
-  //     Ptr<Node> receiveNode = (*i);
-  //     Ptr<Node> sendNode = (*j);
-  //     receiveStat[receiveNode][sendNode] = 0;
-  //   }
-  // }
-  txPower = 30;
-  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
-  {
-    Ptr<Node> node = *i;
-    nodeDensity[node] = 0;
-    nodePower[node] = 30;
-  }
-  // coverArea[10] = 200;
-  // coverArea[20] = 350;
-  // coverArea[30] = 620;
+  sumoData = "highway.mobility.tcl";
+  traceFile = "state.log"; 
+}
 
+/************************************************************************
+* When vehicle changes it's state(velocity and position),this function 
+* will write this information to traceFile.
+*************************************************************************/
+static void
+CourseChange (std::ostream *os, std::string foo, Ptr<const MobilityModel> model)
+{
+  Ptr<Node> node = model->GetObject<Node> ();
+  Vector pos = model->GetPosition ();          // Get position
+  Vector vel = model->GetVelocity ();          // Get velocity
+  *os <<"Time :"<<Now().GetMilliSeconds()
+      <<", NodeID: "<< node->GetId() 
+      << ", position:" << pos 
+      << ", velocity:"<< vel << std::endl;
 }
 
 
@@ -331,24 +333,19 @@ Init ()
 void 
 SetChannel(void)
 {
-  YansWifiChannelHelper waveChannel;// = YansWifiChannelHelper::Default ();
-  waveChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-  waveChannel.AddPropagationLoss ("ns3::TwoRayGroundPropagationLossModel",
-                            "Frequency", DoubleValue (5.89e9),
-                            "HeightAboveZ", DoubleValue (0.5));
-  YansWavePhyHelper wavePhy =  YansWavePhyHelper::Default ();
-  wavePhy.Set("TxPowerLevels", UintegerValue (9));
-  wavePhy.Set("TxPowerStart",  DoubleValue (-20));
-  wavePhy.Set("TxPowerEnd",  DoubleValue (30));
-  wavePhy.Set("ChannelNumber",  UintegerValue (CCH));
-  wavePhy.SetChannel (waveChannel.Create ());
-  wavePhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11);
-  QosWaveMacHelper waveMac = QosWaveMacHelper::Default ();
+  YansWifiChannelHelper wifiChannel;
+  wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+  wifiChannel.AddPropagationLoss ("ns3::D2DPropagationLossModel");
+//  wifiChannel.AddPropagationLoss ("ns3::NakagamiPropagationLossModel");
+  YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
+  wifiPhy.Set("TxPowerStart",  DoubleValue (30));
+  wifiPhy.Set("TxPowerEnd",  DoubleValue (30));
+  wifiPhy.Set("ChannelNumber",  UintegerValue (CCH));
+  wifiPhy.SetChannel (wifiChannel.Create ());
+  WaveMacHelper waveMac = WaveMacHelper::Default ();
   WaveHelper waveHelper = WaveHelper::Default ();
-  devices = waveHelper.Install (wavePhy, waveMac, nodes);
-  //wavePhy.EnablePcap ("wave-simple-device", devices);
+  devices = waveHelper.Install (wifiPhy, waveMac, nodes);
 }
-
 
 /************************************************************************
 * Create wave nodes and import traffic data from sumo software.
@@ -375,25 +372,24 @@ CreateWaveNodes (void)
     RngSeedManager::SetSeed (6+i);
     RngSeedManager::SetRun (7+i);
     
-    //double uniform_var = rngNodes->GetValue(0,1);
-    //double p = (double)x/25000.0 + 1.0/40.0;
-    int d = delta;
-    if(x%d == 0)
+    double uniform_var = rngNodes->GetValue(0,1);
+    double p = (double)x/(25000.0/densityIndex) + 1.0/(40.0/densityIndex);
+    //int d = delta;
+    if(uniform_var <= p)
     {
-      //++nodesNumber;
+      ++nodesNumber;
       //std::cout << x << " " << ++j << std::endl;
       positionAlloc->Add (Vector (x, 0.0, 0.0));
     }
   }
-  /////////////////////////////////std::cout << nodesNumber << std::endl;
   nodes = NodeContainer ();
   nodes.Create (nodesNumber);      
   mobility.SetPositionAllocator (positionAlloc);
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (nodes);
 
-  // Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",
-  //              MakeBoundCallback (&CourseChange, &outfile));
+  Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",
+               MakeBoundCallback (&CourseChange, &outfile));
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> node_src = (*i);
@@ -415,7 +411,7 @@ CreateWaveNodes (void)
       double distance = model_src->GetDistanceFrom (model_dest);
       if(distance <= 1000)
       {
-        receiversNum[distance] += ((simulationTime-1) * frequencySafety); 
+        receiversNum[distance] += (simulationTime * frequencySafety); 
       }
       if(distance <= 500)
       {
@@ -423,7 +419,6 @@ CreateWaveNodes (void)
       }
     }  
   }
-
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> node = (*i);
@@ -441,81 +436,6 @@ CreateWaveNodes (void)
 }
 
 
-void
-CalculateTxPower ()
-{
-  Time now = Now (); 
-  //std::cout << "Time: " << now.GetSeconds() << "s" << std::endl;
-
-  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
-  {
-    Ptr<Node> receiveNode = (*i);
-    
-    double neighborNum = receiveStat[receiveNode].size();
-    nodeDensity[receiveNode] = LAMBDA * neighborNum / (distanceMax[receiveNode] * 2);
-    //std::cout << "node id: "<< receiveNode->GetId() << " max distance: " << distanceMax[receiveNode] << " neighbors number: " << neighborNum << " local density: " << nodeDensity[receiveNode] << std::endl;
-    
-    
-    // for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
-    // {
-    //   if (i != j)
-    //   {
-    //     Ptr<Node> sendNode = (*j);
-    //     receiveStat[receiveNode][sendNode] = 0;
-    //   }
-    // }
-    std::vector<double> distanceVec;
-    for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
-    {
-      if(i == j)
-      {
-        continue;
-      }
-      Ptr<Node> sendNode = (*j);
-      //std::cout << receiveNode->GetId() << "-" <<sendNode->GetId() <<" "<< receiveDistance[receiveNode][sendNode] << std::endl;
-      if (receiveDistance[receiveNode][sendNode] != 0)
-      {
-        distanceVec.push_back(receiveDistance[receiveNode][sendNode]);
-      }
-    }
-    sort(distanceVec.begin(), distanceVec.end());
-    double targetDistance;
-    if (neighborNum > THRESHOLD)
-    {
-      targetDistance = distanceVec[THRESHOLD];                             
-    }
-    else
-    {
-      targetDistance = 1000 * THRESHOLD / nodeDensity[receiveNode] / 2;
-    }
-    nodePower[receiveNode] =  rxThreshold - 10 * std::log10((0.5*0.5*0.5*0.5) / (targetDistance*targetDistance*targetDistance*targetDistance));
-    //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl; 
-    if (nodePower[receiveNode] > 30)
-    {
-      nodePower[receiveNode] = 30;
-    }
-    else if (nodePower[receiveNode] < 0)
-    {
-      nodePower[receiveNode] = 0;
-    }
-    //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl;  
-    receiveStat[receiveNode].clear();
-  }
-
-
-
-  // double meanDensity = 0;
-  // double total = 0;
-  // double ii = 0;
-  // for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
-  // {
-  //   Ptr<Node> receiveNode = (*i);
-  //   total += nodeDensity[receiveNode];
-  //   ii++;
-  // }
-  // meanDensity = total / ii;
-  // std::cout << "Mean density: " << meanDensity << std::endl;
-}
 
 /***************************************************************************
 * Receive a packet. To calculate PRR,receiveTotal++ when function is called 
@@ -525,12 +445,9 @@ CalculateTxPower ()
 bool
 Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address &sender)
 {
-  //////////////////////////////std::cout << "receive" << std::endl;
   StatsTag tag;
   double delay;
   bool result;
-  //uint32_t src_id;
-  //uint32_t dest_id;
   result = pkt->FindFirstMatchingByteTag (tag);
   if (!result)
   {
@@ -550,27 +467,13 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   Vector dest_pos = model->GetPosition ();
    // std::cout << src_pos << " 2" << std::endl;
 
-  double distance = CalculateDistance (dest_pos, src_pos);
-  uint32_t src_id = tag.GetNodeId();
-  Ptr<Node> src_node = nodes.Get(src_id);
-  // dest_id = node->GetId();
-  // receiveStats[dest_id][src_id]++;
-  receiveStat[node][src_node]++;
-  if (distance > distanceMax[node])
-  {
-    distanceMax[node] = distance;
-  }
-  receiveDistance[node][src_node] = distance;
-
   if((src_pos.x <= 4000) && (src_pos.x >= 1000))
   {  
     if(src_pos.y == dest_pos.y)
     {
       double distance = CalculateDistance (dest_pos, src_pos);
-      if(sendTime.GetMilliSeconds() > 1000)
-      {
-        ++receiveNum[distance];
-      }
+
+      ++receiveNum[distance]; 
       //std::cout << receiveNum[distance] << " " << receiversNum[distance] <<std::endl;
       //++statsDelay[delay];
       if((delay <= 50)&&(distance <= 500))
@@ -578,54 +481,37 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
         ++statsDelay[delay];
       }
     }
-
+    
   }
-  Ptr<WaveNetDevice> wave_dev = DynamicCast<WaveNetDevice> (dev);
-  uint32_t var = wave_dev->GetLocalDensity() + now.GetSeconds() + node->GetId();
-  wave_dev->CalculateLocalDensity(var);
-
-   // local_density = CalculateDensity ();
-   // dev.SetLocalDensity(local_density);
   return true;
 }
  
+/***************************************************************************
+* Send a safety packet. Before we broadcast,we should judge other nodes 
+* whether is in the transmission range of sender.
+****************************************************************************/
 void
 SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
 {
   Time now = Now ();
   
+
   Ptr<Packet> packet = Create<Packet> (sizeSafety);
   Ptr<Node> src = sender->GetNode();
   Ptr<MobilityModel> model_src = src->GetObject<MobilityModel> ();                     
   Vector src_pos = model_src->GetPosition (); 
-  StatsTag tag = StatsTag (src->GetId(), now, src_pos.x, src_pos.y);
-  /////////////////////////std::cout << channelNumber << std::endl;
+  StatsTag tag = StatsTag (safetyPacketID, now, src_pos.x, src_pos.y);
+  //std::cout << pos_src  << " 1" << std::endl;
   packet->AddByteTag (tag);
   if((src_pos.x <= 4000) && (src_pos.x >= 1000))
   {
    
      safetyPacketID++;
   }
-  ///////////////////////////////std::cout <<"Time :"<<Now().GetMilliSeconds() << "ms" << std::endl;
-  // SeqTsHeader seqTs2;
-  // seqTs2.SetSeq (1);
-  // packet->AddHeader (seqTs2);
-  const Address dest = Mac48Address::GetBroadcast ();
-  WifiMode wave_mode = WifiModeFactory::CreateWifiMode ("OfdmRate6MbpsBW10MHz",
-                                     WIFI_MOD_CLASS_OFDM,
-                                     true,
-                                     10000000, 6000000,
-                                     WIFI_CODE_RATE_1_2,
-                                     4);  
-  //wifi_mode = WifiMode();
-  //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
-  //uint8_t txPower = sender->CalculateTxPower();
-  txPower = nodePower[src];
-  //std::cout << (int)txPower << std::endl;
-  TxInfo info = TxInfo (channelNumber, 7, wave_mode, 0, txPower);  
-  //std::cout << "nodeID: " << sender->GetNode()->GetId() << " time: "<< now.GetMicroSeconds() << " txPower " << (int32_t)txPower << std::endl;
-  sender->SendX (packet, dest, WSMP_PROT_NUMBER, info);
   
+  const Address dest = Mac48Address::GetBroadcast ();   
+  TxInfo info = TxInfo (channelNumber);  
+  sender->SendX (packet, dest, WSMP_PROT_NUMBER, info);
 
 }
 
@@ -648,10 +534,72 @@ InitStats (void)
   statsDelay.clear();
  
 
-  //Simulator::ScheduleDestroy (&StatQueuedPackets);
+  Simulator::ScheduleDestroy (&StatQueuedPackets);
 }
 
+void
+StatSingleQueue (Ptr<WaveEdcaTxopN> edca)
+{
+  WifiMacHeader hdr;
+  ObjectMapValue map;
+  edca->GetAttribute ("Queues", map);
+  for (ObjectPtrContainerValue::Iterator i = map.Begin(); i != map.End(); ++i)
+  {
+	  Ptr<WifiMacQueue> queue = DynamicCast<WifiMacQueue> (i->second);
+	  Ptr<const Packet> pkt;
+	  while (pkt = queue->Dequeue (&hdr))
+	  {
+		  LlcSnapHeader llc;
+		  ConstCast<Packet>(pkt)->RemoveHeader (llc);
 
+		  if (llc.GetType () == WSMP_PROT_NUMBER)
+		  {
+			  queueSafety ++;
+
+		  }
+	  }
+  }
+}
+
+// when simulation is stopped, we need to stats the queued packets
+// so the real transmitted packets will be (sends - queues).
+void
+StatQueuedPackets ()
+{
+  NetDeviceContainer::Iterator i;
+  for (i = devices.Begin (); i != devices.End (); ++i)
+  {
+	  Ptr<WaveNetDevice> device = DynamicCast<WaveNetDevice>(*i);
+	  Ptr<RegularWifiMac> rmac = DynamicCast<RegularWifiMac>(device->GetMac ());
+
+	  PointerValue ptr;
+
+	  // for WAVE devices, the DcaTxop will not be used.
+	  // rmac->GetAttribute ("DcaTxop", ptr);
+	  // Ptr<DcaTxop> dcaTxop = ptr.Get<DcaTxop> ();
+
+	  rmac->GetAttribute ("VO_EdcaTxopN", ptr);
+	  Ptr<EdcaTxopN> vo_edcaTxopN = ptr.Get<EdcaTxopN> ();
+	  Ptr<WaveEdcaTxopN> wave_vo = DynamicCast<WaveEdcaTxopN>(vo_edcaTxopN);
+	  StatSingleQueue (wave_vo);
+
+	  rmac->GetAttribute ("VI_EdcaTxopN", ptr);
+	  Ptr<EdcaTxopN> vi_edcaTxopN = ptr.Get<EdcaTxopN> ();
+	  Ptr<WaveEdcaTxopN> wave_vi = DynamicCast<WaveEdcaTxopN>(vi_edcaTxopN);
+	  StatSingleQueue (wave_vi);
+
+	  rmac->GetAttribute ("BE_EdcaTxopN", ptr);
+	  Ptr<EdcaTxopN> be_edcaTxopN = ptr.Get<EdcaTxopN> ();
+	  Ptr<WaveEdcaTxopN> wave_be = DynamicCast<WaveEdcaTxopN>(be_edcaTxopN);
+	  StatSingleQueue (wave_be);
+
+	  rmac->GetAttribute ("BK_EdcaTxopN", ptr);
+	  Ptr<EdcaTxopN> bk_edcaTxopN = ptr.Get<EdcaTxopN> ();
+	  Ptr<WaveEdcaTxopN> wave_bk = DynamicCast<WaveEdcaTxopN>(bk_edcaTxopN);
+	  StatSingleQueue (wave_bk);
+  }
+  
+}
 
 /***************************************************************************
 * Configure the channel. We use the continuous access in CCH channel define
@@ -664,23 +612,17 @@ Configuration (void)
   for (i = devices.Begin (); i != devices.End (); ++i)
   {
     Ptr<WaveNetDevice> sender = DynamicCast<WaveNetDevice> (*i);
-    
+    SchInfo schInfo = SchInfo (CCH, false, 0xff);
+    //We select a time quantum to send the safety packet
+    Simulator::Schedule (Seconds (0.0), &WaveNetDevice::StartSch, sender, schInfo);
     for (uint32_t time = 0; time != simulationTime; ++time)
-    {   
-       // Simulator::Schedule (Seconds (time), CalculateTxPower);
-      
+    {
       for (uint32_t sends = 0; sends != frequencySafety; ++sends)
       {
-        //Simulator::Schedule (Seconds (time), CalculateTxPower, sender, CCH);   
         Simulator::Schedule (Seconds (rngSafety->GetValue (time, time + 1)), SendWsmpPackets, sender, CCH);
       }
       
     }
-  }
-  for (uint32_t time = 1; time <= simulationTime; ++time)
-  {
-    
-      Simulator::Schedule (Seconds (time), CalculateTxPower);
   }
 
 }
@@ -690,12 +632,9 @@ void
 Stats (void)
 {
   // first show stats information
-  
   NS_LOG_UNCOND (" safety packet: ");
   NS_LOG_UNCOND ("  sends = " << safetyPacketID);
-  Ptr<Node> middleNode = nodes.Get(nodesNumber/2);
-  NS_LOG_UNCOND ("  tx power = " << (int)nodePower[middleNode]);
-  //NS_LOG_UNCOND ("  queues = " << queueSafety);
+  NS_LOG_UNCOND ("  queues = " << queueSafety);
   // second show performance result
   NS_LOG_UNCOND (" performance result:");
   std::map<double,uint32_t>::iterator i;
@@ -704,8 +643,7 @@ Stats (void)
   {
      double distance = i->first;
      //std::cout << distance << "m " << receiveNum[distance] << " " << i->second << std::endl;
-     //NS_LOG_UNCOND (" distance:" << i->first  << "receive rate:" << (double)(receiveNum[distance])/(i->second));
-     std::cout<<" distance:" << i->first  << " receive rate:" << (double)(receiveNum[distance])/(i->second)<<std::endl;;
+     NS_LOG_UNCOND (" distance:" << i->first  << "m receive rate:" << (double)(receiveNum[distance])/(double)(i->second));
   }
 
   for(uint32_t k = 1; k < 50; ++k)
@@ -715,10 +653,9 @@ Stats (void)
   }
   for(j = statsDelay.begin (); j != statsDelay.end (); ++j)
   {
-    //NS_LOG_UNCOND (" delay:" << j->first << " receive rate:" << (double) (j->second) / (double)receiveTotal);
-    //std::cout<<" delay:" << j->first << " receive rate:" << (double) (j->second) / (double)receiveTotal<<std::endl;
+    NS_LOG_UNCOND (" delay:" << j->first << " receive rate:" << (double) (j->second) / (double)receiveTotal);
   }
-  //std::cout << "safetyPacketID: " << safetyPacketID << std::endl;
+
   //NS_LOG_UNCOND ("  safetyPDR = " << safetyPDR << " safetyPRR = " << safetyPRR);
   //double delaySafety = timeSafety / receiveS  fety / 1000.0;
   //NS_LOG_UNCOND ("  delaySafety = " << delaySafety << "ms");
@@ -754,7 +691,6 @@ Run (void)
   Simulator::Stop (Seconds (simulationTime));
   Simulator::Run ();
   Simulator::Destroy ();
-  
   Stats ();
   GetTime();
   //outfile.close();
@@ -764,19 +700,13 @@ Run (void)
 int 
 main()
 {
-  //LogComponentEnable ("power-control", LOG_LEVEL_DEBUG);
+  //LogComponentEnable ("highway-static", LOG_LEVEL_DEBUG);
   GetTime();
+  for(densityIndex = 1.0; densityIndex <= 4.0; )
+  {
+    Run();
+    densityIndex *= 2;
+  }
   
-  // delta = 1000/20; 
-  // Run();
-
-  // delta = 1000/50;
-  // Run();
-
-  delta = 1000/100;
-  Run();
-
-  delta = 1000/200;
-  Run();
 }
  
