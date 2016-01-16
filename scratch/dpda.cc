@@ -50,7 +50,7 @@
 #define MAXLEN 620
 //#define THRESHOLD 70
 const double e = 2.718281828459;
-const int rxThreshold = -92;
+const int rxThreshold = -94;
 using namespace ns3;
 
 NS_LOG_COMPONENT_DEFINE ("highway-static");
@@ -514,9 +514,9 @@ CalculateTxPower ()
     {
       nodePower[receiveNode] = 30;
     }
-    else if (nodePower[receiveNode] < 7)
+    else if (nodePower[receiveNode] < 0)
     {
-      nodePower[receiveNode] = 7;
+      nodePower[receiveNode] = 0;
     }
     if (!powerControl)
     {
