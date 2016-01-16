@@ -261,8 +261,8 @@ bool Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Ad
 void Init (int argc, char **argv);
 void InitStats (void);
 void Stats (uint32_t randomNumber);
-void StatQueuedPackets (void);
-void StatSingleQueue (Ptr<WaveEdcaTxopN> edca);
+// void StatQueuedPackets (void);
+// void StatSingleQueue (Ptr<WaveEdcaTxopN> edca);
 void GetPosition(Ptr<Node> node);
 static void CourseChange (std::ostream *os, std::string foo, Ptr<const MobilityModel> model);
 
@@ -333,18 +333,21 @@ CourseChange (std::ostream *os, std::string foo, Ptr<const MobilityModel> model)
 void 
 SetChannel(void)
 {
-  YansWifiChannelHelper wifiChannel;
-  wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-  wifiChannel.AddPropagationLoss ("ns3::D2DPropagationLossModel");
-//  wifiChannel.AddPropagationLoss ("ns3::NakagamiPropagationLossModel");
-  YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
-  wifiPhy.Set("TxPowerStart",  DoubleValue (30));
-  wifiPhy.Set("TxPowerEnd",  DoubleValue (30));
-  wifiPhy.Set("ChannelNumber",  UintegerValue (CCH));
-  wifiPhy.SetChannel (wifiChannel.Create ());
-  WaveMacHelper waveMac = WaveMacHelper::Default ();
+  YansWifiChannelHelper waveChannel;// = YansWifiChannelHelper::Default ();
+  waveChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+  waveChannel.AddPropagationLoss ("ns3::TwoRayGroundPropagationLossModel",
+                            "Frequency", DoubleValue (5.89e9),
+                            "HeightAboveZ", DoubleValue (0.5));
+  YansWavePhyHelper wavePhy =  YansWavePhyHelper::Default ();
+  wavePhy.Set("TxPowerLevels", UintegerValue (9));
+  wavePhy.Set("TxPowerStart",  DoubleValue (-20));
+  wavePhy.Set("TxPowerEnd",  DoubleValue (30));
+  wavePhy.Set("ChannelNumber",  UintegerValue (CCH));
+  wavePhy.SetChannel (waveChannel.Create ());
+  wavePhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11);
+  QosWaveMacHelper waveMac = QosWaveMacHelper::Default ();
   WaveHelper waveHelper = WaveHelper::Default ();
-  devices = waveHelper.Install (wifiPhy, waveMac, nodes);
+  devices = waveHelper.Install (wavePhy, waveMac, nodes);
 }
 
 /************************************************************************
@@ -534,72 +537,72 @@ InitStats (void)
   statsDelay.clear();
  
 
-  Simulator::ScheduleDestroy (&StatQueuedPackets);
+  //Simulator::ScheduleDestroy (&StatQueuedPackets);
 }
 
-void
-StatSingleQueue (Ptr<WaveEdcaTxopN> edca)
-{
-  WifiMacHeader hdr;
-  ObjectMapValue map;
-  edca->GetAttribute ("Queues", map);
-  for (ObjectPtrContainerValue::Iterator i = map.Begin(); i != map.End(); ++i)
-  {
-	  Ptr<WifiMacQueue> queue = DynamicCast<WifiMacQueue> (i->second);
-	  Ptr<const Packet> pkt;
-	  while (pkt = queue->Dequeue (&hdr))
-	  {
-		  LlcSnapHeader llc;
-		  ConstCast<Packet>(pkt)->RemoveHeader (llc);
+// void
+// StatSingleQueue (Ptr<WaveEdcaTxopN> edca)
+// {
+//   WifiMacHeader hdr;
+//   ObjectMapValue map;
+//   edca->GetAttribute ("Queues", map);
+//   for (ObjectPtrContainerValue::Iterator i = map.Begin(); i != map.End(); ++i)
+//   {
+// 	  Ptr<WifiMacQueue> queue = DynamicCast<WifiMacQueue> (i->second);
+// 	  Ptr<const Packet> pkt;
+// 	  while (pkt = queue->Dequeue (&hdr))
+// 	  {
+// 		  LlcSnapHeader llc;
+// 		  ConstCast<Packet>(pkt)->RemoveHeader (llc);
 
-		  if (llc.GetType () == WSMP_PROT_NUMBER)
-		  {
-			  queueSafety ++;
+// 		  if (llc.GetType () == WSMP_PROT_NUMBER)
+// 		  {
+// 			  queueSafety ++;
 
-		  }
-	  }
-  }
-}
+// 		  }
+// 	  }
+//   }
+// }
 
 // when simulation is stopped, we need to stats the queued packets
 // so the real transmitted packets will be (sends - queues).
-void
-StatQueuedPackets ()
-{
-  NetDeviceContainer::Iterator i;
-  for (i = devices.Begin (); i != devices.End (); ++i)
-  {
-	  Ptr<WaveNetDevice> device = DynamicCast<WaveNetDevice>(*i);
-	  Ptr<RegularWifiMac> rmac = DynamicCast<RegularWifiMac>(device->GetMac ());
+// void
+// StatQueuedPackets ()
+// {
+//   NetDeviceContainer::Iterator i;
+//   for (i = devices.Begin (); i != devices.End (); ++i)
+//   {
+// 	  Ptr<WaveNetDevice> device = DynamicCast<WaveNetDevice>(*i);
+// 	  Ptr<RegularWifiMac> rmac = DynamicCast<RegularWifiMac>(device->GetMac ());
 
-	  PointerValue ptr;
+// 	  PointerValue ptr;
 
-	  // for WAVE devices, the DcaTxop will not be used.
-	  // rmac->GetAttribute ("DcaTxop", ptr);
-	  // Ptr<DcaTxop> dcaTxop = ptr.Get<DcaTxop> ();
+// 	  // for WAVE devices, the DcaTxop will not be used.
+// 	  // rmac->GetAttribute ("DcaTxop", ptr);
+// 	  // Ptr<DcaTxop> dcaTxop = ptr.Get<DcaTxop> ();
 
-	  rmac->GetAttribute ("VO_EdcaTxopN", ptr);
-	  Ptr<EdcaTxopN> vo_edcaTxopN = ptr.Get<EdcaTxopN> ();
-	  Ptr<WaveEdcaTxopN> wave_vo = DynamicCast<WaveEdcaTxopN>(vo_edcaTxopN);
-	  StatSingleQueue (wave_vo);
+// 	  rmac->GetAttribute ("VO_EdcaTxopN", ptr);
+// 	  Ptr<EdcaTxopN> vo_edcaTxopN = ptr.Get<EdcaTxopN> ();
+// 	  Ptr<WaveEdcaTxopN> wave_vo = DynamicCast<WaveEdcaTxopN>(vo_edcaTxopN);
+// 	  StatSingleQueue (wave_vo);
 
-	  rmac->GetAttribute ("VI_EdcaTxopN", ptr);
-	  Ptr<EdcaTxopN> vi_edcaTxopN = ptr.Get<EdcaTxopN> ();
-	  Ptr<WaveEdcaTxopN> wave_vi = DynamicCast<WaveEdcaTxopN>(vi_edcaTxopN);
-	  StatSingleQueue (wave_vi);
+// 	  rmac->GetAttribute ("VI_EdcaTxopN", ptr);
+// 	  Ptr<EdcaTxopN> vi_edcaTxopN = ptr.Get<EdcaTxopN> ();
+// 	  Ptr<WaveEdcaTxopN> wave_vi = DynamicCast<WaveEdcaTxopN>(vi_edcaTxopN);
+// 	  StatSingleQueue (wave_vi);
 
-	  rmac->GetAttribute ("BE_EdcaTxopN", ptr);
-	  Ptr<EdcaTxopN> be_edcaTxopN = ptr.Get<EdcaTxopN> ();
-	  Ptr<WaveEdcaTxopN> wave_be = DynamicCast<WaveEdcaTxopN>(be_edcaTxopN);
-	  StatSingleQueue (wave_be);
+// 	  rmac->GetAttribute ("BE_EdcaTxopN", ptr);
+// 	  Ptr<EdcaTxopN> be_edcaTxopN = ptr.Get<EdcaTxopN> ();
+// 	  Ptr<WaveEdcaTxopN> wave_be = DynamicCast<WaveEdcaTxopN>(be_edcaTxopN);
+// 	  StatSingleQueue (wave_be);
 
-	  rmac->GetAttribute ("BK_EdcaTxopN", ptr);
-	  Ptr<EdcaTxopN> bk_edcaTxopN = ptr.Get<EdcaTxopN> ();
-	  Ptr<WaveEdcaTxopN> wave_bk = DynamicCast<WaveEdcaTxopN>(bk_edcaTxopN);
-	  StatSingleQueue (wave_bk);
-  }
+// 	  rmac->GetAttribute ("BK_EdcaTxopN", ptr);
+// 	  Ptr<EdcaTxopN> bk_edcaTxopN = ptr.Get<EdcaTxopN> ();
+// 	  Ptr<WaveEdcaTxopN> wave_bk = DynamicCast<WaveEdcaTxopN>(bk_edcaTxopN);
+// 	  StatSingleQueue (wave_bk);
+//   }
   
-}
+// }
 
 /***************************************************************************
 * Configure the channel. We use the continuous access in CCH channel define

@@ -48,7 +48,7 @@
 
 #define LAMBDA 1000
 #define MAXLEN 620
-#define THRESHOLD 70
+//#define THRESHOLD 70
 const double e = 2.718281828459;
 const int rxThreshold = -92;
 using namespace ns3;
@@ -249,12 +249,16 @@ Ptr<UniformRandomVariable> rngNodes;
 uint32_t safetyPacketID;
 
 uint8_t txPower;
+uint8_t configPower;
+double density;
+uint32_t receiversThres;
+bool powerControl;
   // we will check whether the packet is received by the neighbors
   // in the transmission range
 
 //std::map<std::pair<uint32_t,Time> , std::vector<uint32_t> *> broadcastPackets;
-std::map<double, uint32_t> receiveNum;
-std::map<double, uint32_t> receiversNum;     
+std::map<uint32_t, uint32_t> receiveNum;
+std::map<uint32_t, uint32_t> receiversNum;     
 std::map<uint32_t, uint32_t> statsDelay;
 
 std::map<uint32_t, std::map<uint32_t, uint32_t> > receiveStats;
@@ -267,11 +271,13 @@ std::map<Ptr<Node>, int8_t> nodePower;
 
 uint32_t receiveTotal;
 uint32_t queueSafety;
-uint64_t timeSafety;        
+uint64_t timeSafety;
+double throughput;      
 std::ofstream outfile;
 std::string traceFile;
 std::string sumoData;
 
+std::ofstream fout("position.log");
 
 void
 Init ()
@@ -279,7 +285,7 @@ Init ()
   //nodesNumber = 5000 / delta;
   nodesNumber = 0;
   frequencySafety = 10;         // 10Hz, 100ms send one safety packet
-  simulationTime = 10;          // make it run 100s
+  simulationTime = 5;          // make it run 100s
   sizeSafety = 400;             // 100 bytes small size
   safetyPacketID  = 0;
   //receiveSafety  = 0;
@@ -312,12 +318,12 @@ Init ()
   //   }
   // }
   txPower = 30;
-  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
-  {
-    Ptr<Node> node = *i;
-    nodeDensity[node] = 0;
-    nodePower[node] = 30;
-  }
+  // for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+  // {
+  //   Ptr<Node> node = *i;
+  //   nodeDensity[node] = 0;
+  //   nodePower[node] = 30;
+  // }
   // coverArea[10] = 200;
   // coverArea[20] = 350;
   // coverArea[30] = 620;
@@ -368,21 +374,24 @@ CreateWaveNodes (void)
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
   //int j = 0;
+  double p = density / 800;
   for(int i = 1; i <= 1000; ++i)
   {
     int x = i * 5;
     //int vehNum = 0;
     RngSeedManager::SetSeed (6+i);
     RngSeedManager::SetRun (7+i);
-    
-    //double uniform_var = rngNodes->GetValue(0,1);
-    //double p = (double)x/25000.0 + 1.0/40.0;
-    int d = delta;
-    if(x%d == 0)
+
+    //int d = delta;
+    for (uint32_t i = 0; i < 4; ++i)
     {
-      ++nodesNumber;
-      //std::cout << x << " " << ++j << std::endl;
-      positionAlloc->Add (Vector (x, 0.0, 0.0));
+      double uniform_var = rngNodes->GetValue(0,1);
+      if(uniform_var <= p)
+      {
+        ++nodesNumber;
+        //std::cout << x << " " << ++j << std::endl;
+        positionAlloc->Add (Vector (x, i*3, 0.0));
+      }
     }
   }
   /////////////////////////////////std::cout << nodesNumber << std::endl;
@@ -394,11 +403,22 @@ CreateWaveNodes (void)
 
   // Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",
   //              MakeBoundCallback (&CourseChange, &outfile));
+
+  fout << "###################################################################" << std::endl;
+
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> node_src = (*i);
+    //init node configure
+    nodeDensity[node_src] = 0;          
+    nodePower[node_src] = 30;
+    distanceMax[node_src] = 0;
     Ptr<MobilityModel> model_src = node_src->GetObject<MobilityModel> ();
     Vector pos_src = model_src->GetPosition ();
+
+    fout << "node id: "<< node_src->GetId()
+         << " node position: " << pos_src << std::endl;
+
     if((pos_src.x < 1000) || (pos_src.x > 4000))
     {
       continue;
@@ -412,7 +432,7 @@ CreateWaveNodes (void)
       }
       Ptr<Node> node_dest = (*j);
       Ptr<MobilityModel> model_dest = node_dest->GetObject<MobilityModel> ();  
-      double distance = model_src->GetDistanceFrom (model_dest);
+      uint32_t distance = model_src->GetDistanceFrom (model_dest);
       if(distance <= 1000)
       {
         receiversNum[distance] += ((simulationTime-1) * frequencySafety); 
@@ -480,15 +500,15 @@ CalculateTxPower ()
     }
     sort(distanceVec.begin(), distanceVec.end());
     double targetDistance;
-    if (neighborNum > THRESHOLD)
+    if (neighborNum > receiversThres)
     {
-      targetDistance = distanceVec[THRESHOLD];                             
+      targetDistance = distanceVec[receiversThres];                             
     }
     else
     {
-      targetDistance = 1000 * THRESHOLD / nodeDensity[receiveNode] / 2;
+      targetDistance = 1000 * receiversThres / nodeDensity[receiveNode] / 2;
     }
-    nodePower[receiveNode] =  rxThreshold - 10 * std::log10((0.5*0.5*0.5*0.5) / (targetDistance*targetDistance*targetDistance*targetDistance));
+    nodePower[receiveNode] =  rxThreshold - 10 * std::log10((1.259*1.259*0.5*0.5*0.5*0.5) / (targetDistance*targetDistance*targetDistance*targetDistance));
     //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl; 
     if (nodePower[receiveNode] > 30)
     {
@@ -498,8 +518,13 @@ CalculateTxPower ()
     {
       nodePower[receiveNode] = 7;
     }
+    if (!powerControl)
+    {
+      nodePower[receiveNode] = configPower;
+    }
     //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl;  
     receiveStat[receiveNode].clear();
+    receiveDistance[receiveNode].clear();
   }
 
 
@@ -529,9 +554,12 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   StatsTag tag;
   double delay;
   bool result;
+  //double packetSize;
   //uint32_t src_id;
   //uint32_t dest_id;
   result = pkt->FindFirstMatchingByteTag (tag);
+  //packetSize = pkt.GetSize();
+  throughput += sizeSafety;
   if (!result)
   {
     NS_FATAL_ERROR ("the packet here shall have a stats tag");
@@ -552,6 +580,11 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
 
   double distance = CalculateDistance (dest_pos, src_pos);
   uint32_t src_id = tag.GetNodeId();
+  //uint32_t dest_id = node->GetId();
+  // if (distance < 20)
+  // {
+  //   std::cout << src_id << " " << dest_id << std::endl;
+  // }
   Ptr<Node> src_node = nodes.Get(src_id);
   // dest_id = node->GetId();
   // receiveStats[dest_id][src_id]++;
@@ -564,9 +597,9 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
 
   if((src_pos.x <= 4000) && (src_pos.x >= 1000))
   {  
-    if(src_pos.y == dest_pos.y)
+    if(1)
     {
-      double distance = CalculateDistance (dest_pos, src_pos);
+      uint32_t distance = CalculateDistance (dest_pos, src_pos);
       if(sendTime.GetMilliSeconds() > 1000)
       {
         ++receiveNum[distance];
@@ -620,7 +653,16 @@ SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
   //uint8_t txPower = sender->CalculateTxPower();
+  // if (powerControl)
+  // {
+  //   txPower = nodePower[src];
+  // }
+  // else
+  // {
+  //   txPower = configPower;
+  // }
   txPower = nodePower[src];
+  
   //std::cout << (int)txPower << std::endl;
   TxInfo info = TxInfo (channelNumber, 7, wave_mode, 0, txPower);  
   //std::cout << "nodeID: " << sender->GetNode()->GetId() << " time: "<< now.GetMicroSeconds() << " txPower " << (int32_t)txPower << std::endl;
@@ -643,6 +685,7 @@ InitStats (void)
   queueSafety = 0;
   timeSafety = 0;
   receiveTotal = 0;
+  throughput = 0;
   receiveNum.clear();
   receiversNum.clear();
   statsDelay.clear();
@@ -690,22 +733,25 @@ void
 Stats (void)
 {
   // first show stats information
-  
-  NS_LOG_UNCOND (" safety packet: ");
-  NS_LOG_UNCOND ("  sends = " << safetyPacketID);
   Ptr<Node> middleNode = nodes.Get(nodesNumber/2);
-  NS_LOG_UNCOND ("  tx power = " << (int)nodePower[middleNode]);
+  throughput = throughput *8 / 1000000 / simulationTime;         //convert to Mbps    
+  //NS_LOG_UNCOND (" safety packet: ");
+  NS_LOG_UNCOND ("  sends = " << safetyPacketID << "  tx power = " << (int)nodePower[middleNode] << " Throughput = " << throughput << "Mbps  Threshold = " << receiversThres);
+                //bps->mbps
+  // NS_LOG_UNCOND ("  tx power = " << (int)nodePower[middleNode]);
+  // NS_LOG_UNCOND (" Throughput = " << throughput);
   //NS_LOG_UNCOND ("  queues = " << queueSafety);
   // second show performance result
   NS_LOG_UNCOND (" performance result:");
-  std::map<double,uint32_t>::iterator i;
+  std::map<uint32_t,uint32_t>::iterator i;
   std::map<uint32_t, uint32_t>::iterator j;
   for(i = receiversNum.begin(); i != receiversNum.end(); ++i)
   {
      double distance = i->first;
      //std::cout << distance << "m " << receiveNum[distance] << " " << i->second << std::endl;
      //NS_LOG_UNCOND (" distance:" << i->first  << "receive rate:" << (double)(receiveNum[distance])/(i->second));
-     std::cout<<" distance:" << i->first  << " receive rate:" << (double)(receiveNum[distance])/(i->second)<<std::endl;;
+     std::cout <<" distance:" << i->first  << " receive rate:" << (double)(receiveNum[distance])/(i->second)<<std::endl;;
+     //std::cout << receiveNum[distance] << " " << i->second << std::endl;
   }
 
   for(uint32_t k = 1; k < 50; ++k)
@@ -749,7 +795,7 @@ Run (void)
   InitStats ();
   //NS_LOG_UNCOND ("nodes number: " << nodesNumber << ", simulation time: " << simulationTime << "s, safety packet size: " << sizeSafety << "bytes");
   CreateWaveNodes ();
-  NS_LOG_UNCOND ("nodes number: " << nodesNumber << ", simulation time: " << simulationTime << "s, safety packet size: " << sizeSafety << "bytes");
+  NS_LOG_UNCOND ("nodes number: " << nodesNumber << " density: " << density << ", simulation time: " << simulationTime << "s, safety packet size: " << sizeSafety << "bytes");
   Configuration ();
   Simulator::Stop (Seconds (simulationTime));
   Simulator::Run ();
@@ -766,17 +812,57 @@ main()
 {
   //LogComponentEnable ("power-control", LOG_LEVEL_DEBUG);
   GetTime();
-  
-  delta = 1000/20; 
-  Run();
+  //receiversThres
+  //configPower = 10;
+  //std::cout << "tx power: " << (int)configPower << "dbm" << std::endl;
 
-  delta = 1000/50;
-  Run();
+  for(int i = 2; i <= 60; ++i)
+  {
+    density = 10*i;
+    receiversThres = 0;
+    //std::cout << "*******************************" << std::endl;
+    powerControl = false;
+    configPower = 10;
+    Run();
+    // configPower = 20;
+    // Run();
+    // configPower = 30;
+    // Run();
 
-  delta = 1000/100;
-  Run();
+    // powerControl = true;
+    // receiversThres = 60;
+    // Run();
+    // receiversThres = 70;
+    // Run();
+    // receiversThres = 80;
+    // Run();
 
-  delta = 1000/200;
-  Run();
+    i += 2;
+  }
+  std::cout << "**********************************************************************" << std::endl;
+  for(int i = 2; i <= 60; ++i)
+  {
+    density = 10*i;
+    receiversThres = 0;
+    //std::cout << "*******************************" << std::endl;
+    powerControl = false;
+    // configPower = 10;
+    // Run();
+    configPower = 20;
+    Run();
+    // configPower = 30;
+    // Run();
+
+    // powerControl = true;
+    // receiversThres = 60;
+    // Run();
+    // receiversThres = 70;
+    // Run();
+    // receiversThres = 80;
+    // Run();
+
+    i += 2;
+  }
+ 
 }
  

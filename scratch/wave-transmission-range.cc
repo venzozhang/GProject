@@ -166,7 +166,7 @@ SendTestPackets()
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
   //uint8_t txPower = sender->CalculateTxPower();
-  uint8_t txPower = 7;
+  uint8_t txPower = 10;
   TxInfo info = TxInfo (CCH, 7, wave_mode, 0, txPower);  
   Ptr<WaveNetDevice> sender = DynamicCast<WaveNetDevice> (devices.Get(0));
   sender->SendX (packet, dest, 0x88DC, info);

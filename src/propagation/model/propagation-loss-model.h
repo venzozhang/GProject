@@ -456,7 +456,8 @@ private:
    * \return the Dbm
    */
   double DbmFromW (double w) const;
-
+   Ptr<ErlangRandomVariable>  m_erlangRandomVariable;
+  Ptr<GammaRandomVariable> m_gammaRandomVariable;
   double m_lambda;        //!< the carrier wavelength
   double m_frequency;     //!< the carrier frequency
   double m_systemLoss;    //!< the system loss
@@ -848,6 +849,95 @@ private:
 private:
   double m_range; //!< Maximum Transmission Range (meters)
 };
+
+class LtePropagationLossModel : public PropagationLossModel
+{
+public:
+  static TypeId GetTypeId (void);
+  LtePropagationLossModel ();
+  virtual ~LtePropagationLossModel ();
+
+  //void SetSystemLoss (double systemLoss);
+  void SetFrequency (double frequency);
+  double GetFrequency (void) const;
+  
+
+ 
+
+  //double GetSystemLoss (void) const;
+  
+  void SetHeight (double height);
+
+private:
+
+  LtePropagationLossModel (const LtePropagationLossModel &o);
+  LtePropagationLossModel & operator = (const LtePropagationLossModel &o);
+  virtual double DoCalcRxPower (double txPowerDbm,
+                                Ptr<MobilityModel> a,
+                                Ptr<MobilityModel> b) const;
+  virtual int64_t DoAssignStreams (int64_t stream);
+  double DbmToW (double dbm) const;
+  double DbmFromW (double w) const;
+
+  static const double PI;
+
+  double m_lambda;
+  double m_frequency;
+  double m_height_p;
+
+  Ptr<NormalRandomVariable> m_normalRandomVariable;
+  Ptr<ErlangRandomVariable>  m_erlangRandomVariable;
+  Ptr<GammaRandomVariable> m_gammaRandomVariable;
+  Ptr<UniformRandomVariable> m_uniformRandomVariable;
+
+};
+
+
+class D2DPropagationLossModel : public PropagationLossModel
+{
+public:
+  static TypeId GetTypeId (void);
+  D2DPropagationLossModel ();
+  virtual ~D2DPropagationLossModel ();
+
+  //void SetSystemLoss (double systemLoss);
+  void SetFrequency (double frequency);
+  double GetFrequency (void) const;
+  
+
+ 
+
+  //double GetSystemLoss (void) const;
+  
+  void SetHeight (double height);
+  void SetHeightP (double height_p);
+
+private:
+
+  D2DPropagationLossModel (const D2DPropagationLossModel &o);
+  D2DPropagationLossModel & operator = (const D2DPropagationLossModel &o);
+  virtual double DoCalcRxPower (double txPowerDbm,
+                                Ptr<MobilityModel> a,
+                                Ptr<MobilityModel> b) const;
+  virtual int64_t DoAssignStreams (int64_t stream);
+  double DbmToW (double dbm) const;
+  double DbmFromW (double w) const;
+
+  static const double PI;
+
+  double m_lambda;
+  double m_frequency;
+  double m_height_p;
+  double m_height;
+  
+
+  Ptr<NormalRandomVariable> m_normalRandomVariable;
+  Ptr<ErlangRandomVariable>  m_erlangRandomVariable;
+  Ptr<GammaRandomVariable> m_gammaRandomVariable;
+  Ptr<UniformRandomVariable> m_uniformRandomVariable;
+
+};
+
 
 } // namespace ns3
 

@@ -280,6 +280,8 @@ FriisPropagationLossModel::DoAssignStreams (int64_t stream)
 
 NS_OBJECT_ENSURE_REGISTERED (TwoRayGroundPropagationLossModel);
 
+//const double TwoRayGroundPropagationLossModel::PI = 3.14159265358979323846;
+
 TypeId 
 TwoRayGroundPropagationLossModel::GetTypeId (void)
 {
@@ -288,7 +290,7 @@ TwoRayGroundPropagationLossModel::GetTypeId (void)
     .AddConstructor<TwoRayGroundPropagationLossModel> ()
     .AddAttribute ("Frequency", 
                    "The carrier frequency (in Hz) at which propagation occurs  (default is 5.15 GHz).",
-                   DoubleValue (5.150e9),
+                   DoubleValue (5.890e9),
                    MakeDoubleAccessor (&TwoRayGroundPropagationLossModel::SetFrequency,
                                        &TwoRayGroundPropagationLossModel::GetFrequency),
                    MakeDoubleChecker<double> ())
@@ -304,9 +306,19 @@ TwoRayGroundPropagationLossModel::GetTypeId (void)
                    MakeDoubleChecker<double> ())
     .AddAttribute ("HeightAboveZ",
                    "The height of the antenna (m) above the node's Z coordinate",
-                   DoubleValue (0),
+                   DoubleValue (0.5),
                    MakeDoubleAccessor (&TwoRayGroundPropagationLossModel::m_heightAboveZ),
                    MakeDoubleChecker<double> ())
+    .AddAttribute ("ErlangRv",
+                   "Access to the underlying ErlangRandomVariable",
+                   StringValue ("ns3::ErlangRandomVariable"),
+                   MakePointerAccessor (&TwoRayGroundPropagationLossModel::m_erlangRandomVariable),
+                   MakePointerChecker<ErlangRandomVariable> ())
+    .AddAttribute ("GammaRv",
+                   "Access to the underlying GammaRandomVariable",
+                   StringValue ("ns3::GammaRandomVariable"),
+                   MakePointerAccessor (&TwoRayGroundPropagationLossModel::m_gammaRandomVariable),
+                   MakePointerChecker<GammaRandomVariable> ());
   ;
   return tid;
 }
@@ -409,44 +421,79 @@ TwoRayGroundPropagationLossModel::DoCalcRxPower (double txPowerDbm,
   double txAntHeight = a->GetPosition ().z + m_heightAboveZ;
   double rxAntHeight = b->GetPosition ().z + m_heightAboveZ;
 
+  double rxPowerMean;
+  double m;
   // Calculate a crossover distance, under which we use Friis
   /*
    * 
    * dCross = (4 * pi * Ht * Hr) / lambda
    *
    */
-
+   //std::cout << M_PI << std::endl;
   double dCross = (4 * M_PI * txAntHeight * rxAntHeight) / m_lambda;
   double tmp = 0;
-  //std::cout << dCross << std::endl;
   if (distance <= dCross)
-    {
-      // We use Friis
-      double numerator = m_lambda * m_lambda;
-      tmp = M_PI * distance;
-      double denominator = 16 * tmp * tmp * m_systemLoss;
-      double pr = 10 * std::log10 (numerator / denominator);
-      NS_LOG_DEBUG ("Receiver within crossover (" << dCross << "m) for Two_ray path; using Friis");
-      NS_LOG_DEBUG ("distance=" << distance << "m, attenuation coefficient=" << pr << "dB");
-      return txPowerDbm + pr;
-    }
+  {
+    // We use Friis
+    double numerator = m_lambda * m_lambda;
+    tmp = M_PI * distance;
+    double denominator = 16 * tmp * tmp * m_systemLoss;
+    double pr = 10 * std::log10 (numerator / denominator);
+    NS_LOG_DEBUG ("Receiver within crossover (" << dCross << "m) for Two_ray path; using Friis");
+    NS_LOG_DEBUG ("distance=" << distance << "m, attenuation coefficient=" << pr << "dB");
+    rxPowerMean = txPowerDbm + pr;
+  }
   else   // Use Two-Ray Pathloss
+  {
+    tmp = txAntHeight * rxAntHeight;
+    double rayNumerator = tmp * tmp;
+    tmp = distance * distance;
+    double rayDenominator = tmp * tmp * m_systemLoss;
+    double rayPr = 10 * std::log10 (rayNumerator / rayDenominator);
+    NS_LOG_DEBUG ("distance=" << distance << "m, attenuation coefficient=" << rayPr << "dB");
+    rxPowerMean = txPowerDbm + rayPr;
+  }
+  
+  // if (distance < 80)
+  // {
+  //   m = 1.5;
+  // }
+  // else if (distance < 200)
+  // {
+  //   m = 0.75;
+  // }
+  // else
+  // {
+  //   m = 0.75;
+  // }
+  m = 3;
+  double powerW = std::pow (10, (rxPowerMean - 30) / 10);
+  double rxPowerW;
+
+  // switch between Erlang- and Gamma distributions: this is only for
+  // speed. (Gamma is equal to Erlang for any positive integer m.)
+  unsigned int int_m = static_cast<unsigned int>(std::floor (m));
+
+  if (int_m == m)
     {
-      tmp = txAntHeight * rxAntHeight;
-      double rayNumerator = tmp * tmp;
-      tmp = distance * distance;
-      double rayDenominator = tmp * tmp * m_systemLoss;
-      double rayPr = 10 * std::log10 (rayNumerator / rayDenominator);
-      NS_LOG_DEBUG ("distance=" << distance << "m, attenuation coefficient=" << rayPr << "dB");
-      return txPowerDbm + rayPr;
-
+      rxPowerW = m_erlangRandomVariable->GetValue (int_m, powerW / m);
     }
-}
+  else
+    {
+      rxPowerW = m_gammaRandomVariable->GetValue (m, powerW / m);
+    }
+    double rxPowerDbm = 10 * std::log10 (rxPowerW) + 30;
+   // std::cout << M_PI << " " <<rxPowerMean << " " << rxPowerDbm << std::endl;
+  return rxPowerDbm;
 
+}
+           
 int64_t
 TwoRayGroundPropagationLossModel::DoAssignStreams (int64_t stream)
 {
-  return 0;
+  m_erlangRandomVariable->SetStream (stream);
+  m_gammaRandomVariable->SetStream (stream + 1);
+  return 2;
 }
 
 // ------------------------------------------------------------------------- //
@@ -742,9 +789,7 @@ NakagamiPropagationLossModel::DoCalcRxPower (double txPowerDbm,
   NS_LOG_DEBUG ("Nakagami distance=" << distance << "m, " <<
                 "power=" << powerW <<"W, " <<
                 "resultPower=" << resultPowerW << "W=" << resultPowerDbm << "dBm");
-  std::cout<< "Nakagami distance=" << distance << "m, " <<
-                "power=" << powerW <<"W, " <<
-                "resultPower=" << resultPowerW << "W=" << resultPowerDbm << "dBm" << std::endl;
+
   return resultPowerDbm;
 }
 
@@ -926,6 +971,325 @@ int64_t
 RangePropagationLossModel::DoAssignStreams (int64_t stream)
 {
   return 0;
+}
+
+
+// ------------------------------------------------------------------------- //
+NS_OBJECT_ENSURE_REGISTERED (LtePropagationLossModel);
+//const double LtePropagationLossModel::PI = 3.14159265358979323846;
+
+ TypeId 
+ LtePropagationLossModel::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::LtePropagationLossModel")
+    .SetParent<PropagationLossModel> ()
+    .AddConstructor<LtePropagationLossModel> ()
+    .AddAttribute ("Frequency", 
+                   "The carrier frequency (in Hz) at which propagation occurs  (default is 5.15 GHz).",
+                   DoubleValue (2.4e9),
+                   MakeDoubleAccessor (&LtePropagationLossModel::SetFrequency,
+                                       &LtePropagationLossModel::GetFrequency),
+                   MakeDoubleChecker<double> ())
+  
+    
+    .AddAttribute ("Height",
+                   "The height of the enb antenna (m)",
+                   DoubleValue (0.5),
+                   MakeDoubleAccessor (&LtePropagationLossModel::m_height_p),
+                   MakeDoubleChecker<double> ())
+
+   
+    .AddAttribute ("NormalRv",
+                   "Access to the underlying NormalRandomVariable",
+                   StringValue ("ns3::NormalRandomVariable"),
+                   MakePointerAccessor (&LtePropagationLossModel::m_normalRandomVariable),
+                   MakePointerChecker<NormalRandomVariable> ())
+    .AddAttribute ("ErlangRv",
+                   "Access to the underlying ErlangRandomVariable",
+                   StringValue ("ns3::ErlangRandomVariable"),
+                   MakePointerAccessor (&LtePropagationLossModel::m_erlangRandomVariable),
+                   MakePointerChecker<ErlangRandomVariable> ())
+    .AddAttribute ("GammaRv",
+                   "Access to the underlying GammaRandomVariable",
+                   StringValue ("ns3::GammaRandomVariable"),
+                   MakePointerAccessor (&LtePropagationLossModel::m_gammaRandomVariable),
+                   MakePointerChecker<GammaRandomVariable> ())
+    .AddAttribute ("UniformRv",
+                   "Access to the underlying UniformRandomVariable",
+                   StringValue ("ns3::UniformRandomVariable"),
+                   MakePointerAccessor (&LtePropagationLossModel::m_uniformRandomVariable),
+                   MakePointerChecker<UniformRandomVariable> ());
+    
+  ;
+  return tid;
+}
+
+LtePropagationLossModel::LtePropagationLossModel ()
+{
+}
+
+LtePropagationLossModel::~LtePropagationLossModel ()
+{
+}
+
+void
+LtePropagationLossModel::SetHeight (double height)
+{
+  m_height_p = height;
+}
+
+
+void
+LtePropagationLossModel::SetFrequency (double frequency)
+{
+  m_frequency = frequency;
+  static const double C = 299792458.0; // speed of light in vacuum
+  m_lambda = C / frequency;
+}
+
+double
+LtePropagationLossModel::GetFrequency (void) const
+{
+  return m_frequency;
+}
+
+double 
+LtePropagationLossModel::DbmToW (double dbm) const
+{
+  double mw = std::pow (10.0,dbm / 10.0);
+  return mw / 1000.0;
+}
+
+double
+LtePropagationLossModel::DbmFromW (double w) const
+{
+  double dbm = std::log10 (w * 1000.0) * 10.0;
+  return dbm;
+}
+
+double 
+LtePropagationLossModel::DoCalcRxPower (double txPowerDbm,
+                                                 Ptr<MobilityModel> a,
+                                                 Ptr<MobilityModel> b) const
+{
+ //DoAssignStreams(15);
+  
+  double distance = a->GetDistanceFrom (b); 
+  m_normalRandomVariable->SetStream (distance);
+  m_uniformRandomVariable->SetStream(distance+3);
+  // Set the height of the Tx and Rx antennae
+  //double txAntHeight = a->GetPosition ().z + m_heightAboveZ;
+  //double rxAntHeight = b->GetPosition ().z + m_heightAboveZ;
+
+  double rxPowerDbm = 0;
+  double frequency = m_frequency / 1e9;  
+  double lambda = m_lambda;
+  double shadowFading = 0;
+  double pathloss = 0;
+  //double pl = 0;
+  //double pl_freespace = 0;
+  double plos = 0;
+  //pl_freespace = 20.0 * std::log10(distance) + 46.4 + 20.0 * std::log10(m_frequency/5.0);
+  plos = std::min(18.0/distance,1.0) * (1.0 - std::exp(-distance/36.0)) + std::exp(-distance/36.0);
+  double dCritical = 4.0 * m_height_p * m_height_p / lambda;
+  //std::cout << dCritical << std::endl;
+  if(m_uniformRandomVariable->GetValue(0,1) < plos)
+  {
+    //std::cout << "LOS case" << std::endl;
+    if(distance > dCritical)
+    {
+      //std::cout << "aaaaaaaaa" << std::endl;
+      pathloss = 40.0 * std::log10(distance) + 7.8 - 18.0 * std::log10(m_height_p) - 18 * std::log10(m_height_p) + 2.0 * std::log10(frequency);
+    }
+    else
+    {
+      //std::cout << "bbbbbbbbbb" << std::endl;
+      pathloss = 22.0 * std::log10(distance) + 28.0 + 20.0 * std::log10(frequency);
+    }
+  }
+  else
+  {
+    //std::cout << "NLOS case" << std::endl;
+    pathloss = 36.7 * std::log10(distance) + 22.7 + 26 * std::log10(frequency);
+  }
+  //pathloss = std::max(pl_freespace,pl);
+  shadowFading = m_normalRandomVariable -> GetValue(0,4);
+  rxPowerDbm = txPowerDbm - pathloss - shadowFading;
+  //std::cout << "distance:" << distance << "m tx power:" << txPowerDbm << "dbm,  rx power:" <<rxPowerDbm << std::endl;
+  return rxPowerDbm;
+  
+}
+           
+int64_t
+LtePropagationLossModel::DoAssignStreams (int64_t stream)
+{
+  m_normalRandomVariable->SetStream (stream);
+  m_gammaRandomVariable->SetStream (stream+1);
+  m_erlangRandomVariable->SetStream(stream+2);
+  m_uniformRandomVariable->SetStream(stream+3);
+  return 2;
+}
+
+// ------------------------------------------------------------------------- //
+
+NS_OBJECT_ENSURE_REGISTERED (D2DPropagationLossModel);
+//const double D2DPropagationLossModel::PI = 3.14159265358979323846;
+
+ TypeId 
+ D2DPropagationLossModel::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::D2DPropagationLossModel")
+    .SetParent<PropagationLossModel> ()
+    .AddConstructor<D2DPropagationLossModel> ()
+    .AddAttribute ("Frequency", 
+                   "The carrier frequency (in Hz) at which propagation occurs  (default is 5.15 GHz).",
+                   DoubleValue (2.4e9),
+                   MakeDoubleAccessor (&D2DPropagationLossModel::SetFrequency,
+                                       &D2DPropagationLossModel::GetFrequency),
+                   MakeDoubleChecker<double> ())
+
+    .AddAttribute ("HeightP",
+                   "The height of the enb antenna (m)",
+                   DoubleValue (0.8),
+                   MakeDoubleAccessor (&D2DPropagationLossModel::m_height_p),
+                   MakeDoubleChecker<double> ())
+    .AddAttribute ("Height",
+                   "The height of the enb antenna (m)",
+                   DoubleValue (1.5),
+                   MakeDoubleAccessor (&D2DPropagationLossModel::m_height),
+                   MakeDoubleChecker<double> ())
+    .AddAttribute ("NormalRv",
+                   "Access to the underlying NormalRandomVariable",
+                   StringValue ("ns3::NormalRandomVariable"),
+                   MakePointerAccessor (&D2DPropagationLossModel::m_normalRandomVariable),
+                   MakePointerChecker<NormalRandomVariable> ())
+    .AddAttribute ("ErlangRv",
+                   "Access to the underlying ErlangRandomVariable",
+                   StringValue ("ns3::ErlangRandomVariable"),
+                   MakePointerAccessor (&D2DPropagationLossModel::m_erlangRandomVariable),
+                   MakePointerChecker<ErlangRandomVariable> ())
+    .AddAttribute ("GammaRv",
+                   "Access to the underlying GammaRandomVariable",
+                   StringValue ("ns3::GammaRandomVariable"),
+                   MakePointerAccessor (&D2DPropagationLossModel::m_gammaRandomVariable),
+                   MakePointerChecker<GammaRandomVariable> ())
+     .AddAttribute ("UniformRv",
+                   "Access to the underlying UniformRandomVariable",
+                   StringValue ("ns3::UniformRandomVariable"),
+                   MakePointerAccessor (&D2DPropagationLossModel::m_uniformRandomVariable),
+                   MakePointerChecker<UniformRandomVariable> ());
+    
+  ;
+  return tid;
+}
+
+D2DPropagationLossModel::D2DPropagationLossModel ()
+{
+}
+
+D2DPropagationLossModel::~D2DPropagationLossModel ()
+{
+}
+
+void
+D2DPropagationLossModel::SetHeight (double height)
+{
+  m_height = height;
+}
+void
+D2DPropagationLossModel::SetHeightP (double height_p)
+{
+  m_height_p = height_p;
+}
+
+void
+D2DPropagationLossModel::SetFrequency (double frequency)
+{
+  m_frequency = frequency;
+  static const double C = 299792458.0; // speed of light in vacuum
+  m_lambda = C / frequency;
+}
+
+double
+D2DPropagationLossModel::GetFrequency (void) const
+{
+  return m_frequency;
+}
+
+double 
+D2DPropagationLossModel::DbmToW (double dbm) const
+{
+  double mw = std::pow (10.0,dbm / 10.0);
+  return mw / 1000.0;
+}
+
+double
+D2DPropagationLossModel::DbmFromW (double w) const
+{
+  double dbm = std::log10 (w * 1000.0) * 10.0;
+  return dbm;
+}
+
+double 
+D2DPropagationLossModel::DoCalcRxPower (double txPowerDbm,
+                                                 Ptr<MobilityModel> a,
+                                                 Ptr<MobilityModel> b) const
+{
+  
+  //DoAssignStreams(15);
+  double distance = a->GetDistanceFrom (b); 
+  m_normalRandomVariable->SetStream (distance);
+  m_uniformRandomVariable->SetStream(distance+3);
+  // Set the height of the Tx and Rx antennae
+  //double txAntHeight = a->GetPosition ().z + m_heightAboveZ;
+  //double rxAntHeight = b->GetPosition ().z + m_heightAboveZ;
+
+  double rxPowerDbm = 0;
+  double frequency = m_frequency / 1e9;  
+  double lambda = m_lambda;
+  double shadowFading = 0;
+  double pathloss = 0;
+  double pl = 0;
+  double pl_freespace = 0;
+  double plos = 0;
+  pl_freespace = 20.0 * std::log10(distance) + 46.4 + 20.0 * std::log10(frequency/5.0);
+  plos = std::min(18.0/distance,1.0) * (1.0 - std::exp(-distance/36.0)) + std::exp(-distance/36.0);
+  double dCritical = 4.0 * m_height_p * m_height_p / lambda;
+  //std::cout << dCritical << std::endl;
+  if(m_uniformRandomVariable->GetValue(0,1) < plos)
+  {
+    std::cout << "LOS case" << std::endl;
+    if(distance > dCritical)
+    {
+      //std::cout << "aaaaaaaaa" << std::endl;
+      pl = 40.0 * std::log10(distance) + 7.56 - 17.3 * std::log10(m_height_p) - 17.3 * std::log10(m_height_p) + 2.7 * std::log10(frequency);
+    }
+    else
+    {
+      //std::cout << "bbbbbbbbbb" << std::endl;
+      pl = 22.7 * std::log10(distance) + 27.0 + 20.0 * std::log10(frequency);
+    }
+  }
+  else
+  {
+    std::cout << "NLOS case" << std::endl;
+    pl = (44.9 - 6.55 * std::log10(m_height)) * std::log10(distance) + 5.83 * std::log10(m_height) + 18.38 + 23.0 * std::log10(frequency);
+  }
+  pathloss = std::max(pl_freespace,pl);
+  shadowFading = m_normalRandomVariable -> GetValue(0,7);
+  rxPowerDbm = txPowerDbm - pathloss - shadowFading;
+  //std::cout << "distance:" << distance << "m tx power:" << txPowerDbm << "dbm,  rx power:" <<rxPowerDbm << std::endl;
+  return rxPowerDbm;
+}
+           
+int64_t
+D2DPropagationLossModel::DoAssignStreams (int64_t stream)
+{
+  m_normalRandomVariable->SetStream (stream);
+  m_gammaRandomVariable->SetStream (stream+1);
+  m_erlangRandomVariable->SetStream(stream+2);
+  m_uniformRandomVariable->SetStream(stream+3);
+  return 2;
 }
 
 // ------------------------------------------------------------------------- //
