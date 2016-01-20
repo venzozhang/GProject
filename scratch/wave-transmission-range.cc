@@ -77,7 +77,7 @@ GetTransmissionRange()
 {
   NS_LOG_UNCOND ("calculating transmission range...");
   bool stop = false;
-  TestRange = 100;
+  TestRange = 0;
   while (!stop)
   {
      TestRange += 10.0;
@@ -156,7 +156,7 @@ void
 SendTestPackets()
 {
   Address dest = Mac48Address::GetBroadcast ();
-  Ptr<Packet> packet = Create<Packet> (200);
+  Ptr<Packet> packet = Create<Packet> (00);
   WifiMode wave_mode = WifiModeFactory::CreateWifiMode ("OfdmRate6MbpsBW10MHz",
                                      WIFI_MOD_CLASS_OFDM,
                                      true,

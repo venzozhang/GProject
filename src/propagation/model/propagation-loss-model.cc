@@ -422,7 +422,7 @@ TwoRayGroundPropagationLossModel::DoCalcRxPower (double txPowerDbm,
   double rxAntHeight = b->GetPosition ().z + m_heightAboveZ;
 
   double rxPowerMean;
-  double m;
+  
   // Calculate a crossover distance, under which we use Friis
   /*
    * 
@@ -454,18 +454,7 @@ TwoRayGroundPropagationLossModel::DoCalcRxPower (double txPowerDbm,
     rxPowerMean = txPowerDbm + rayPr;
   }
   
-  // if (distance < 80)
-  // {
-  //   m = 1.5;
-  // }
-  // else if (distance < 200)
-  // {
-  //   m = 0.75;
-  // }
-  // else
-  // {
-  //   m = 0.75;
-  // }
+  double m;
   m = 3;
   double powerW = std::pow (10, (rxPowerMean - 30) / 10);
   double rxPowerW;
@@ -475,15 +464,15 @@ TwoRayGroundPropagationLossModel::DoCalcRxPower (double txPowerDbm,
   unsigned int int_m = static_cast<unsigned int>(std::floor (m));
 
   if (int_m == m)
-    {
-      rxPowerW = m_erlangRandomVariable->GetValue (int_m, powerW / m);
-    }
+  {
+    rxPowerW = m_erlangRandomVariable->GetValue (int_m, powerW / m);
+  }
   else
-    {
-      rxPowerW = m_gammaRandomVariable->GetValue (m, powerW / m);
-    }
-    double rxPowerDbm = 10 * std::log10 (rxPowerW) + 30;
-   // std::cout << M_PI << " " <<rxPowerMean << " " << rxPowerDbm << std::endl;
+  {
+    rxPowerW = m_gammaRandomVariable->GetValue (m, powerW / m);
+  }
+  double rxPowerDbm = 10 * std::log10 (rxPowerW) + 30;
+  // double rxPowerDbm = rxPowerMean;
   return rxPowerDbm;
 
 }

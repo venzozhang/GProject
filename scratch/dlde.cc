@@ -459,24 +459,22 @@ CalculateTxPower ()
 {
   Time now = Now (); 
   //std::cout << "Time: " << now.GetSeconds() << "s" << std::endl;
-
+  double meanDensity = 0;
+  double total = 0;
+  double ii = 0;
+  //int lastPower = (int)nodePower[nodes.Get(nodesNumber/2)];
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> receiveNode = (*i);
     
-    double neighborNum = receiveStat[receiveNode].size();
-    nodeDensity[receiveNode] = LAMBDA * neighborNum / (distanceMax[receiveNode] * 2);
+    uint32_t neighborNum = 0;
+    /// = receiveStat[receiveNode].size();
+ 
+    Ptr<MobilityModel> model = receiveNode->GetObject<MobilityModel> ();
+    Vector receivePos = model->GetPosition ();
+    
     //std::cout << "node id: "<< receiveNode->GetId() << " max distance: " << distanceMax[receiveNode] << " neighbors number: " << neighborNum << " local density: " << nodeDensity[receiveNode] << std::endl;
-    
-    
-    // for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
-    // {
-    //   if (i != j)
-    //   {
-    //     Ptr<Node> sendNode = (*j);
-    //     receiveStat[receiveNode][sendNode] = 0;
-    //   }
-    // }
+   
     std::vector<double> distanceVec;
     for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
     {
@@ -485,54 +483,63 @@ CalculateTxPower ()
         continue;
       }
       Ptr<Node> sendNode = (*j);
-      //std::cout << receiveNode->GetId() << "-" <<sendNode->GetId() <<" "<< receiveDistance[receiveNode][sendNode] << std::endl;
+      if (receiveStat[receiveNode][sendNode] > 2)
+      {
+        neighborNum++;
+      }
+
       if (receiveDistance[receiveNode][sendNode] != 0)
       {
         distanceVec.push_back(receiveDistance[receiveNode][sendNode]);
       }
     }
-    sort(distanceVec.begin(), distanceVec.end());
-    double targetDistance;
-    if (neighborNum > THRESHOLD)
-    {
-      targetDistance = distanceVec[THRESHOLD];                             
-    }
-    else
-    {
-      targetDistance = 1000 * THRESHOLD / nodeDensity[receiveNode] / 2;
-    }
-    nodePower[receiveNode] =  rxThreshold - 10 * std::log10((0.5*0.5*0.5*0.5) / (targetDistance*targetDistance*targetDistance*targetDistance));
-    //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl; 
-    if (nodePower[receiveNode] > 30)
-    {
-      nodePower[receiveNode] = 30;
-    }
-    else if (nodePower[receiveNode] < 7)
-    {
-      nodePower[receiveNode] = 7;
-    }
-    //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl;  
-    receiveStat[receiveNode].clear();
-    receiveDistance[receiveNode].clear();
-  }
+    nodeDensity[receiveNode] = LAMBDA * neighborNum / (distanceMax[receiveNode] * 2);
+    
 
-
-
-  double meanDensity = 0;
-  double total = 0;
-  double ii = 0;
-  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
-  {
-    Ptr<Node> receiveNode = (*i);
-    Ptr<MobilityModel> model = receiveNode->GetObject<MobilityModel> ();
-    Vector pos = model->GetPosition ();
-    if((pos.x<4000)&&(pos.x>1000))
+    // if(receiveNode->GetId() == nodesNumber/2)
+    // {
+    //   std::cout << neighborNum << " " << distanceMax[receiveNode] << std::endl;
+    // }
+    if ((receivePos.x > 1000)&&(receivePos.x < 4000))
     {
       total += nodeDensity[receiveNode];
       ii++;
     }
+
+    // sort(distanceVec.begin(), distanceVec.end());
+    // double targetDistance;
+    // if (neighborNum > receiversThres)
+    // {
+    //   targetDistance = distanceVec[receiversThres];                             
+    // }
+    // else
+    // {
+    //   targetDistance = 1000 * receiversThres / nodeDensity[receiveNode] / 2;
+    // }
+    // nodePower[receiveNode] =  rxThreshold - 10 * std::log10((1.259*1.259*0.5*0.5*0.5*0.5) / (targetDistance*targetDistance*targetDistance*targetDistance));
+
+    // if (nodePower[receiveNode] > 30)
+    // {
+    //   nodePower[receiveNode] = 30;
+    // }
+    // else if (nodePower[receiveNode] < 0)
+    // {
+    //   nodePower[receiveNode] = 0;
+    // }
+    // if (!powerControl)
+    // {
+    //   nodePower[receiveNode] = configPower;
+    // }
+    // //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl;  
+    // receiveStat[receiveNode].clear();
+    // receiveDistance[receiveNode].clear();
+    // distanceVec.clear();
+    // distanceMax[receiveNode] = 0;
+    //std::cout << receiveNode->GetId() << ": " << (int)nodePower[receiveNode] << std::endl;
   }
+
   meanDensity = total / ii;
+
   std::cout << "nodes number: " << nodesNumber <<"; Practical density: "<< density << "; Mean Estimate density: " << meanDensity << std::endl;
 }
 
@@ -639,7 +646,7 @@ SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
   //uint8_t txPower = sender->CalculateTxPower();
-  //txPower = nodePower[src];
+  txPower = nodePower[src];
   txPower = configPower;
   //std::cout << (int)txPower << std::endl;
   TxInfo info = TxInfo (channelNumber, 7, wave_mode, 0, txPower);  
