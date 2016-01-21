@@ -264,7 +264,7 @@ std::map<uint32_t, uint32_t> statsDelay;
 std::map<uint32_t, std::map<uint32_t, uint32_t> > receiveStats;
 std::map<Ptr<Node>, std::map<Ptr<Node>, uint32_t> > receiveStat;
 std::map<Ptr<Node>, std::map<Ptr<Node>, double> > receiveDistance;
-std::map<Ptr<Node>, uint32_t> distanceMax;
+std::map<Ptr<Node>, double> distanceMax;
 std::map<Ptr<Node>, double> nodeDensity;
 std::map<Ptr<Node>, int8_t> nodePower;
 //std::map<uint32_t, uint32_t> coverArea;
@@ -852,31 +852,31 @@ main()
   //   i += 2;
   // }
   //std::cout << "**********************************************************************" << std::endl;
-  for(int i = 58; i <= 60;)
-  {
-    density = 10*i;
-    receiversThres = 0;
-    //std::cout << "*******************************" << std::endl;
-    powerControl = false;
-    // configPower = 10;
-    // Run();
-    configPower = 20;
-    Run();
-    // configPower = 30;
-    // Run();
+  // for(int i = 58; i <= 60;)
+  // {
+  //   density = 10*i;
+  //   receiversThres = 0;
+  //   //std::cout << "*******************************" << std::endl;
+  //   powerControl = false;
+  //   // configPower = 10;
+  //   // Run();
+  //   configPower = 20;
+  //   Run();
+  //   // configPower = 30;
+  //   // Run();
 
-    // powerControl = true;
-    // receiversThres = 60;
-    // Run();
-    // receiversThres = 70;
-    // Run();
-    // receiversThres = 80;
-    // Run();
+  //   // powerControl = true;
+  //   // receiversThres = 60;
+  //   // Run();
+  //   // receiversThres = 70;
+  //   // Run();
+  //   // receiversThres = 80;
+  //   // Run();
 
-    i += 2;
-  }
+  //   i += 2;
+  // }
   std::cout << "**********************************************************************" << std::endl;
-  for(int i = 2; i <= 60;)
+  for(int i = 46; i <= 60;)
   {
     density = 10*i;
     receiversThres = 0;

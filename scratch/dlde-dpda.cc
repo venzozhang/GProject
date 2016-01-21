@@ -264,7 +264,7 @@ std::map<uint32_t, uint32_t> statsDelay;
 std::map<uint32_t, std::map<uint32_t, uint32_t> > receiveStats;
 std::map<Ptr<Node>, std::map<Ptr<Node>, uint32_t> > receiveStat;
 std::map<Ptr<Node>, std::map<Ptr<Node>, double> > receiveDistance;
-std::map<Ptr<Node>, uint32_t> distanceMax;
+std::map<Ptr<Node>, double> distanceMax;
 std::map<Ptr<Node>, double> nodeDensity;
 std::map<Ptr<Node>, int8_t> nodePower;
 //std::map<uint32_t, uint32_t> coverArea;
@@ -374,6 +374,7 @@ CreateWaveNodes (void)
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
   //int j = 0;
+
   double p = density / 800;
   for(int i = 1; i <= 1000; ++i)
   {
@@ -383,17 +384,27 @@ CreateWaveNodes (void)
     RngSeedManager::SetRun (7+i);
 
     //int d = delta;
-    for (uint32_t i = 0; i < 4; ++i)
+    for (uint32_t j = 0; j < 4; ++j)
     {
       double uniform_var = rngNodes->GetValue(0,1);
       if(uniform_var <= p)
       {
         ++nodesNumber;
         //std::cout << x << " " << ++j << std::endl;
-        positionAlloc->Add (Vector (x, i*3, 0.0));
+        positionAlloc->Add (Vector (x, j*3, 0.0));
       }
     }
   }
+
+  // for(int i = 1; i <= 1000; ++i)
+  // {
+  //   int x = i * 5;
+  //   RngSeedManager::SetSeed (6+i);
+  //   RngSeedManager::SetRun (7+i);
+  //   nodesNumber++;
+  //   positionAlloc->Add (Vector (x, 0, 0.0));
+  // }
+
   /////////////////////////////////std::cout << nodesNumber << std::endl;
   nodes = NodeContainer ();
   nodes.Create (nodesNumber);      
@@ -481,7 +492,8 @@ CalculateTxPower ()
     Vector receivePos = model->GetPosition ();
     
     //std::cout << "node id: "<< receiveNode->GetId() << " max distance: " << distanceMax[receiveNode] << " neighbors number: " << neighborNum << " local density: " << nodeDensity[receiveNode] << std::endl;
-   
+
+
     std::vector<double> distanceVec;
     for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
     {
@@ -490,16 +502,27 @@ CalculateTxPower ()
         continue;
       }
       Ptr<Node> sendNode = (*j);
-      if (receiveStat[receiveNode][sendNode] > 2)
+      if ((receiveDistance[receiveNode][sendNode] <= distanceMax[receiveNode])&&(receiveStat[receiveNode][sendNode]>0))
       {
+        // if(receiveDistance[receiveNode][sendNode] <= distanceMax[receiveNode])
+        //   std::cout << "equal" << std::endl;
         neighborNum++;
         distanceVec.push_back(receiveDistance[receiveNode][sendNode]);
       }
+
     }
 
     sort(distanceVec.begin(), distanceVec.end());
-    distanceMax[receiveNode] = distanceVec.back();
-    
+    //distanceMax[receiveNode] = distanceVec.back();
+    //std::cout << receiveNode->GetId() <<" "<< distanceMax[receiveNode] << " " << distanceVec.back() << std::endl;
+    if(receiveNode->GetId() == nodesNumber/2)
+    {
+      for(std::vector<double>::iterator j = distanceVec.begin(); j != distanceVec.end(); ++j)
+      {
+        fout << *j << std::endl;
+      }
+      
+    }
     nodeDensity[receiveNode] = LAMBDA * neighborNum / (distanceMax[receiveNode] * 2);
     
 
@@ -513,7 +536,6 @@ CalculateTxPower ()
       ii++;
     }
 
-    sort(distanceVec.begin(), distanceVec.end());
     double targetDistance;
     if (neighborNum > receiversThres)
     {
@@ -592,27 +614,27 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
 
   double distance = CalculateDistance (dest_pos, src_pos);
   uint32_t src_id = tag.GetNodeId();
-  uint32_t dest_id = node->GetId();
+  //uint32_t dest_id = node->GetId();
   // if (distance < 20)
   // {
   //   std::cout << src_id << " " << dest_id << std::endl;
   // }
   Ptr<Node> src_node = nodes.Get(src_id);
 
-  if(dest_id == nodesNumber/2)
-  {
-    if(distance > 500)
-    {
-      std::cout << src_node->GetId() << ": " << (int)nodePower[src_node] << " " <<  nodeDensity[src_node] << std::endl; 
-    }
-  }
+  // if(dest_id == nodesNumber/2)
+  // {
+  //   if(distance > 500)
+  //   {
+  //     std::cout << src_node->GetId() << ": " << (int)nodePower[src_node] << " " <<  nodeDensity[src_node] << std::endl; 
+  //   }
+  // }
   // dest_id = node->GetId();
   // receiveStats[dest_id][src_id]++;
   receiveStat[node][src_node]++;
-  // if ((distance > distanceMax[node])&&(receiveStat[node][src_node] > 2)
-  // {
-  //   distanceMax[node] = distance;
-  // }
+  if ((distance > distanceMax[node])&&(receiveStat[node][src_node] > 3))
+  {
+    distanceMax[node] = distance;
+  }
   receiveDistance[node][src_node] = distance;
 
   if((src_pos.x <= 4000) && (src_pos.x >= 1000))
@@ -907,7 +929,7 @@ main()
   //   i += 2;
   // }
 
-  density = 200;
+  density = 100;
   receiversThres = 70;
   powerControl = true;
   configPower = 0;

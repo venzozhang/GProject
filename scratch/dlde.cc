@@ -262,7 +262,7 @@ std::map<uint32_t, uint32_t> statsDelay;
 std::map<uint32_t, std::map<uint32_t, uint32_t> > receiveStats;
 std::map<Ptr<Node>, std::map<Ptr<Node>, uint32_t> > receiveStat;
 std::map<Ptr<Node>, std::map<Ptr<Node>, double> > receiveDistance;      //no release
-std::map<Ptr<Node>, uint32_t> distanceMax;
+std::map<Ptr<Node>, double> distanceMax;
 std::map<Ptr<Node>, double> nodeDensity;
 std::map<Ptr<Node>, int8_t> nodePower;
 //std::map<uint32_t, uint32_t> coverArea;
@@ -453,7 +453,6 @@ CreateWaveNodes (void)
  
 }
 
-
 void
 CalculateTxPower ()
 {
@@ -462,7 +461,7 @@ CalculateTxPower ()
   double meanDensity = 0;
   double total = 0;
   double ii = 0;
-  //int lastPower = (int)nodePower[nodes.Get(nodesNumber/2)];
+  int lastPower = (int)nodePower[nodes.Get(nodesNumber/2)];
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> receiveNode = (*i);
@@ -474,7 +473,8 @@ CalculateTxPower ()
     Vector receivePos = model->GetPosition ();
     
     //std::cout << "node id: "<< receiveNode->GetId() << " max distance: " << distanceMax[receiveNode] << " neighbors number: " << neighborNum << " local density: " << nodeDensity[receiveNode] << std::endl;
-   
+
+
     std::vector<double> distanceVec;
     for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
     {
@@ -483,16 +483,25 @@ CalculateTxPower ()
         continue;
       }
       Ptr<Node> sendNode = (*j);
-      if (receiveStat[receiveNode][sendNode] > 2)
+      if ((receiveDistance[receiveNode][sendNode]<=distanceMax[receiveNode])&&(receiveStat[receiveNode][sendNode]>0))
       {
         neighborNum++;
-      }
-
-      if (receiveDistance[receiveNode][sendNode] != 0)
-      {
         distanceVec.push_back(receiveDistance[receiveNode][sendNode]);
       }
+
     }
+
+    sort(distanceVec.begin(), distanceVec.end());
+    //distanceMax[receiveNode] = distanceVec.back();
+    //std::cout << distanceMax[receiveNode] << " " << distanceVec.back() << std::endl;
+    // if(receiveNode->GetId() == nodesNumber/2)
+    // {
+    //   for(std::vector<double>::iterator j = distanceVec.begin(); j != distanceVec.end(); ++j)
+    //   {
+    //     fout << *j << std::endl;
+    //   }
+      
+    // }
     nodeDensity[receiveNode] = LAMBDA * neighborNum / (distanceMax[receiveNode] * 2);
     
 
@@ -506,7 +515,6 @@ CalculateTxPower ()
       ii++;
     }
 
-    // sort(distanceVec.begin(), distanceVec.end());
     // double targetDistance;
     // if (neighborNum > receiversThres)
     // {
@@ -531,16 +539,20 @@ CalculateTxPower ()
     //   nodePower[receiveNode] = configPower;
     // }
     // //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl;  
-    // receiveStat[receiveNode].clear();
-    // receiveDistance[receiveNode].clear();
-    // distanceVec.clear();
-    // distanceMax[receiveNode] = 0;
+    receiveStat[receiveNode].clear();
+    receiveDistance[receiveNode].clear();
+    distanceVec.clear();
+    distanceMax[receiveNode] = 0;
     //std::cout << receiveNode->GetId() << ": " << (int)nodePower[receiveNode] << std::endl;
   }
 
   meanDensity = total / ii;
 
-  std::cout << "nodes number: " << nodesNumber <<"; Practical density: "<< density << "; Mean Estimate density: " << meanDensity << std::endl;
+  std::cout << "practical density: " << density << " tx power: "<< (int)lastPower << "dbm; " ;
+  std::cout << "Mean Estimate density: " << meanDensity << "; Middle node density: " << nodeDensity[nodes.Get(nodesNumber/2)] << std::endl;
+  //std::cout << nodeDensity[nodes.Get(nodesNumber/2)] << std::endl;
+
+  //std::cout << "*************************" << std::endl;
 }
 
 /***************************************************************************
@@ -555,9 +567,12 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   StatsTag tag;
   double delay;
   bool result;
+  //double packetSize;
   //uint32_t src_id;
   //uint32_t dest_id;
   result = pkt->FindFirstMatchingByteTag (tag);
+  //packetSize = pkt.GetSize();
+  //throughput += sizeSafety;
   if (!result)
   {
     NS_FATAL_ERROR ("the packet here shall have a stats tag");
@@ -578,11 +593,24 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
 
   double distance = CalculateDistance (dest_pos, src_pos);
   uint32_t src_id = tag.GetNodeId();
+  // uint32_t dest_id = node->GetId();
+  // if (distance < 20)
+  // {
+  //   std::cout << src_id << " " << dest_id << std::endl;
+  // }
   Ptr<Node> src_node = nodes.Get(src_id);
+
+  // if(dest_id == nodesNumber/2)
+  // {
+  //   if(distance > 500)
+  //   {
+  //     std::cout << src_node->GetId() << ": " << (int)nodePower[src_node] << " " <<  nodeDensity[src_node] << std::endl; 
+  //   }
+  // }
   // dest_id = node->GetId();
   // receiveStats[dest_id][src_id]++;
   receiveStat[node][src_node]++;
-  if (distance > distanceMax[node])
+  if ((distance > distanceMax[node])&&(receiveStat[node][src_node] > 3))
   {
     distanceMax[node] = distance;
   }
@@ -590,9 +618,9 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
 
   if((src_pos.x <= 4000) && (src_pos.x >= 1000))
   {  
-    if(src_pos.y == dest_pos.y)
+    if(1)
     {
-      double distance = CalculateDistance (dest_pos, src_pos);
+      uint32_t distance = CalculateDistance (dest_pos, src_pos);
       if(sendTime.GetMilliSeconds() > 1000)
       {
         ++receiveNum[distance];
