@@ -418,7 +418,9 @@ WaveNetDevice::SendX (Ptr<Packet> packet, const Address & dest, uint32_t protoco
       txVector.SetMode (txInfo.dataRate);
       txVector.SetTxPower (txInfo.txPower);
       HigherLayerTxVectorTag tag = HigherLayerTxVectorTag (txVector, false);
+      //std::cout << "kk" << std::endl;
       packet->AddPacketTag (tag);
+      //std::cout << "ss" << std::endl;
     }
 
   LlcSnapHeader llc;

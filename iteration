@@ -1,0 +1,205 @@
+Waf: Entering directory `/home/zwz/ns-allinone-3.22/ns-3.22/build'
+[ 817/1691] cxx: scratch/dlde-dpda.cc -> build/scratch/dlde-dpda.cc.5.o
+[1678/1691] cxxprogram: build/scratch/dlde-dpda.cc.5.o -> build/scratch/dlde-dpda
+Waf: Leaving directory `/home/zwz/ns-allinone-3.22/ns-3.22/build'
+'build' finished successfully (5.752s)
+current time is  Thu Mar  3 23:28:19 2016
+
+nodes number: 477 density: 100, simulation time: 5s, safety packet size: 400bytes
+Time: 1s
+109 475
+time: 1s; tx power: 30dbm;
+Mean Estimate density: 98.4716
+Mean Transimit Power: 23
+*************************
+Time: 2s
+90 425.095
+time: 2s; tx power: 21dbm;
+Mean Estimate density: 97.1521
+Mean Transimit Power: 24
+*************************
+Time: 3s
+99 445
+time: 3s; tx power: 23dbm;
+Mean Estimate density: 96.4527
+Mean Transimit Power: 24
+*************************
+Time: 4s
+88 420.043
+time: 4s; tx power: 22dbm;
+Mean Estimate density: 96.9953
+Mean Transimit Power: 24
+*************************
+Time: 5s
+76 350.013
+time: 5s; tx power: 23dbm;
+Mean Estimate density: 96.6695
+Mean Transimit Power: 24
+*************************
+current time is  Thu Mar  3 23:33:28 2016
+
+nodes number: 987 density: 200, simulation time: 5s, safety packet size: 400bytes
+Time: 1s
+146 340.013
+time: 1s; tx power: 30dbm;
+Mean Estimate density: 188.033
+Mean Transimit Power: 12
+*************************
+Time: 2s
+86 200.022
+time: 2s; tx power: 11dbm;
+Mean Estimate density: 190.869
+Mean Transimit Power: 12
+*************************
+Time: 3s
+90 245
+time: 3s; tx power: 10dbm;
+Mean Estimate density: 188.419
+Mean Transimit Power: 12
+*************************
+Time: 4s
+87 215
+time: 4s; tx power: 13dbm;
+Mean Estimate density: 191.855
+Mean Transimit Power: 12
+*************************
+Time: 5s
+68 150.03
+time: 5s; tx power: 11dbm;
+Mean Estimate density: 192.499
+Mean Transimit Power: 12
+*************************
+current time is  Thu Mar  3 23:51:01 2016
+
+nodes number: 1494 density: 300, simulation time: 5s, safety packet size: 400bytes
+Time: 1s
+209 370
+time: 1s; tx power: 30dbm;
+Mean Estimate density: 266.393
+Mean Transimit Power: 5
+*************************
+Time: 2s
+79 110.164
+time: 2s; tx power: 1dbm;
+Mean Estimate density: 287.152
+Mean Transimit Power: 5
+*************************
+Time: 3s
+94 165.027
+time: 3s; tx power: 1dbm;
+Mean Estimate density: 287.771
+Mean Transimit Power: 5
+*************************
+Time: 4s
+90 135
+time: 4s; tx power: 5dbm;
+Mean Estimate density: 294.009
+Mean Transimit Power: 4
+*************************
+Time: 5s
+92 135.133
+time: 5s; tx power: 3dbm;
+Mean Estimate density: 296.148
+Mean Transimit Power: 4
+*************************
+current time is  Fri Mar  4 00:28:57 2016
+
+nodes number: 2007 density: 400, simulation time: 5s, safety packet size: 400bytes
+Time: 1s
+124 175.026
+time: 1s; tx power: 30dbm;
+Mean Estimate density: 317.637
+Mean Transimit Power: 2
+*************************
+Time: 2s
+85 100.045
+time: 2s; tx power: 1dbm;
+Mean Estimate density: 376.176
+Mean Transimit Power: 1
+*************************
+Time: 3s
+74 85.0529
+time: 3s; tx power: 0dbm;
+Mean Estimate density: 394.208
+Mean Transimit Power: 0
+*************************
+Time: 4s
+83 95.0474
+time: 4s; tx power: 0dbm;
+Mean Estimate density: 403.04
+Mean Transimit Power: 0
+*************************
+Time: 5s
+78 90.05
+time: 5s; tx power: 0dbm;
+Mean Estimate density: 406.278
+Mean Transimit Power: 0
+*************************
+current time is  Fri Mar  4 01:37:11 2016
+
+nodes number: 2526 density: 500, simulation time: 5s, safety packet size: 400bytes
+Time: 1s
+192 275
+time: 1s; tx power: 30dbm;
+Mean Estimate density: 372.633
+Mean Transimit Power: 0
+*************************
+Time: 2s
+75 70
+time: 2s; tx power: 0dbm;
+Mean Estimate density: 472.613
+Mean Transimit Power: 0
+*************************
+Time: 3s
+106 95
+time: 3s; tx power: 0dbm;
+Mean Estimate density: 507.892
+Mean Transimit Power: 0
+*************************
+Time: 4s
+110 100.045
+time: 4s; tx power: 0dbm;
+Mean Estimate density: 509.283
+Mean Transimit Power: 0
+*************************
+Time: 5s
+97 85.2115
+time: 5s; tx power: 0dbm;
+Mean Estimate density: 508.804
+Mean Transimit Power: 0
+*************************
+current time is  Fri Mar  4 03:28:15 2016
+
+nodes number: 3006 density: 600, simulation time: 5s, safety packet size: 400bytes
+Time: 1s
+127 135.3
+time: 1s; tx power: 30dbm;
+Mean Estimate density: -nan
+Mean Transimit Power: 0
+*************************
+Time: 2s
+225 375.012
+time: 2s; tx power: 0dbm;
+Mean Estimate density: 475.622
+Mean Transimit Power: 0
+*************************
+Time: 3s
+100 75.5381
+time: 3s; tx power: 0dbm;
+Mean Estimate density: 599.068
+Mean Transimit Power: 0
+*************************
+Time: 4s
+105 80.5047
+time: 4s; tx power: 0dbm;
+Mean Estimate density: 599.853
+Mean Transimit Power: 0
+*************************
+Time: 5s
+101 80
+time: 5s; tx power: 0dbm;
+Mean Estimate density: 600.057
+Mean Transimit Power: 0
+*************************
+current time is  Fri Mar  4 06:07:49 2016
+

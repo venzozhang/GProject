@@ -1,0 +1,67 @@
+Waf: Entering directory `/home/zwz/ns-allinone-3.22/ns-3.22/build'
+[ 822/1707] cxx: scratch/dlde-dpda1.cc -> build/scratch/dlde-dpda1.cc.10.o
+[1693/1707] cxxprogram: build/scratch/dlde-dpda1.cc.10.o -> build/scratch/dlde-dpda1
+Waf: Leaving directory `/home/zwz/ns-allinone-3.22/ns-3.22/build'
+'build' finished successfully (3.634s)
+current time is  Tue Mar 22 20:03:43 2016
+
+nodes number: 105 density: 20, simulation time: 5s, safety packet size: 400bytes
+20 7
+30 57
+total 64
+current time is  Tue Mar 22 20:04:01 2016
+
+nodes number: 506 density: 100, simulation time: 5s, safety packet size: 400bytes
+80 23
+90 71
+100 73
+110 59
+120 32
+130 15
+140 34
+total 307
+current time is  Tue Mar 22 20:09:26 2016
+
+nodes number: 2007 density: 400, simulation time: 5s, safety packet size: 400bytes
+320 1
+330 3
+340 12
+350 42
+360 66
+370 80
+380 95
+390 106
+400 125
+410 128
+420 117
+430 121
+440 119
+450 79
+460 54
+470 35
+480 21
+490 11
+500 1
+total 1213
+current time is  Tue Mar 22 21:22:22 2016
+
+nodes number: 3006 density: 600, simulation time: 5s, safety packet size: 400bytes
+530 2
+540 27
+550 58
+560 114
+570 149
+580 167
+590 176
+600 199
+610 179
+620 241
+630 175
+640 129
+650 101
+660 52
+670 27
+680 8
+total 1804
+current time is  Wed Mar 23 00:02:50 2016
+

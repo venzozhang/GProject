@@ -30,7 +30,6 @@
 #include "ns3/command-line.h"
 #include "ns3/mobility-model.h"
 #include <iostream>
- #include <fstream>
 #include <algorithm>
 #include <cmath>
 #include "ns3/string.h"
@@ -244,28 +243,28 @@ uint32_t frequencySafety;
 uint32_t simulationTime;
 uint32_t sizeSafety;
 double delta;
+double density;
 Ptr<UniformRandomVariable> rngSafety;
 Ptr<UniformRandomVariable> rngOther;
 Ptr<UniformRandomVariable> rngNodes;
 uint32_t safetyPacketID;
 
-uint32_t lanes;
-double densityIndex;
 uint8_t txPower;
-bool powerControl;
+uint8_t configPower;
   // we will check whether the packet is received by the neighbors
   // in the transmission range
 
 //std::map<std::pair<uint32_t,Time> , std::vector<uint32_t> *> broadcastPackets;
-std::map<int, uint32_t> receiveNum;
-std::map<int, uint32_t> receiversNum;     
+std::map<double, uint32_t> receiveNum;
+std::map<double, uint32_t> receiversNum;     
 std::map<uint32_t, uint32_t> statsDelay;
 
 std::map<uint32_t, std::map<uint32_t, uint32_t> > receiveStats;
 std::map<Ptr<Node>, std::map<Ptr<Node>, uint32_t> > receiveStat;
-std::map<Ptr<Node>, std::map<Ptr<Node>, double> > receiveDistance;
-std::map<Ptr<Node>, uint32_t> distanceMax;
+std::map<Ptr<Node>, std::map<Ptr<Node>, double> > receiveDistance;      //no release
+std::map<Ptr<Node>, double> distanceMax;
 std::map<Ptr<Node>, double> nodeDensity;
+std::map<Ptr<Node>, double> practicalDensity;
 std::map<Ptr<Node>, int8_t> nodePower;
 //std::map<uint32_t, uint32_t> coverArea;
 
@@ -284,7 +283,7 @@ Init ()
   //nodesNumber = 5000 / delta;
   nodesNumber = 0;
   frequencySafety = 10;         // 10Hz, 100ms send one safety packet
-  simulationTime = 10;          // make it run 100s
+  simulationTime = 2;          // make it run 100s
   sizeSafety = 400;             // 100 bytes small size
   safetyPacketID  = 0;
   //receiveSafety  = 0;
@@ -316,14 +315,13 @@ Init ()
   //     receiveStat[receiveNode][sendNode] = 0;
   //   }
   // }
-  lanes = 4;
-  //txPower = 30;
-  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
-  {
-    Ptr<Node> node = *i;
-    nodeDensity[node] = 0;
-    nodePower[node] = 30;
-  }
+  txPower = 30;
+  // for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+  // {
+  //   Ptr<Node> node = *i;
+  //   nodeDensity[node] = 0;
+  //   nodePower[node] = 30;
+  // }
   // coverArea[10] = 200;
   // coverArea[20] = 350;
   // coverArea[30] = 620;
@@ -359,44 +357,177 @@ SetChannel(void)
 /************************************************************************
 * Create wave nodes and import traffic data from sumo software.
 *************************************************************************/
+// void
+// CreateWaveNodes (void)
+// {
+//   //RngSeedManager::SetSeed (2);
+//   //RngSeedManager::SetRun (17);
+
+//   //nodes = NodeContainer ();
+//   //nodes.Create (nodesNumber);                                       //create wave nodes
+//   //Ns2MobilityHelper ns2 = Ns2MobilityHelper (sumoData);             //derive sumo data
+//   //ns2.Install ();
+//   rngNodes = CreateObject<UniformRandomVariable> ();
+//   rngNodes->SetStream (5);
+//   MobilityHelper mobility;
+//   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
+//   //int j = 0;
+//   double p = density / 800;
+//   for(int i = 1; i <= 1000; ++i)
+//   {
+//     int x = i * 5;
+//     //int vehNum = 0;
+//     RngSeedManager::SetSeed (6+i);
+//     RngSeedManager::SetRun (7+i);
+    
+    
+    
+//     //int d = delta;
+//     for (uint32_t i = 0; i < 4; ++i)
+//     {
+//       double uniform_var = rngNodes->GetValue(0,1);
+//       if(uniform_var <= p)
+//       {
+//         ++nodesNumber;
+//         //std::cout << x << " " << ++j << std::endl;
+//         positionAlloc->Add (Vector (x, i*3, 0.0));
+//       }
+//     }
+//   }
+//   /////////////////////////////////std::cout << nodesNumber << std::endl;
+//   nodes = NodeContainer ();
+//   nodes.Create (nodesNumber);      
+//   mobility.SetPositionAllocator (positionAlloc);
+//   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+//   mobility.Install (nodes);
+
+//   fout << "###################################################################" << std::endl;
+
+//   // Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",
+//   //              MakeBoundCallback (&CourseChange, &outfile));
+//   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+//   {
+//     Ptr<Node> node_src = (*i);
+
+//     //init node configure
+//     nodeDensity[node_src] = 0;          
+//     nodePower[node_src] = 30;
+//     distanceMax[node_src] = 0;
+
+//     Ptr<MobilityModel> model_src = node_src->GetObject<MobilityModel> ();
+//     Vector pos_src = model_src->GetPosition ();
+
+//     fout << "node id: "<< node_src->GetId()
+//          << " node position: " << pos_src << std::endl;
+
+//     if((pos_src.x < 1000) || (pos_src.x > 4000))
+//     {
+//       continue;
+//     }
+//     for(NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)    
+//     {
+      
+//       if(i == j)
+//       {
+//         continue;
+//       }
+//       Ptr<Node> node_dest = (*j);
+//       Ptr<MobilityModel> model_dest = node_dest->GetObject<MobilityModel> ();  
+//       double distance = model_src->GetDistanceFrom (model_dest);
+//       if(distance <= 1000)
+//       {
+//         receiversNum[distance] += ((simulationTime-1) * frequencySafety); 
+//       }
+//       if(distance <= 500)
+//       {
+//         receiveTotal += (simulationTime * frequencySafety);    
+//       }
+//     }  
+//   }
+
+//   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+//   {
+//     Ptr<Node> node = (*i);
+//     Ptr<MobilityModel> model = node->GetObject<MobilityModel> ();
+//     Vector pos = model->GetPosition ();
+//     NS_LOG_DEBUG ( node->GetId() <<" position: " << pos);
+//   }
+//   SetChannel();                                                     //set channel paremeter
+//   for (uint32_t i = 0; i != devices.GetN (); ++i)
+//   {
+//     devices.Get (i)->SetReceiveCallback (MakeCallback (&Receive));
+//   }
+// }
+
 void
 CreateWaveNodes (void)
 {
-  //RngSeedManager::SetSeed (2);
-  //RngSeedManager::SetRun (17);
 
-  //nodes = NodeContainer ();
-  //nodes.Create (nodesNumber);                                       //create wave nodes
-  //Ns2MobilityHelper ns2 = Ns2MobilityHelper (sumoData);             //derive sumo data
-  //ns2.Install ();
   rngNodes = CreateObject<UniformRandomVariable> ();
   rngNodes->SetStream (5);
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
   //int j = 0;
-
-  for(int i = 1; i <= 1000; ++i)
+  double p = density / 800;
+  for(int i = 1; i <= 400; ++i)
   {
     int x = i * 5;
     //int vehNum = 0;
     RngSeedManager::SetSeed (6+i);
     RngSeedManager::SetRun (7+i);
-    
-    
-    double p = (double)x/(25000.0/densityIndex) + 1.0/(40.0/densityIndex);
+
     //int d = delta;
-    for (uint32_t i = 0; i < lanes; ++i)
+    for (uint32_t j = 0; j < 4; ++j)
     {
       double uniform_var = rngNodes->GetValue(0,1);
       if(uniform_var <= p)
       {
         ++nodesNumber;
+
         //std::cout << x << " " << ++j << std::endl;
-        positionAlloc->Add (Vector (x, i*5, 0.0));
+        positionAlloc->Add (Vector (x, j*3, 0.0));
       }
     }
   }
-  
+  for(int i = 401; i <= 500; ++i)
+  {
+    int x = i * 5;
+    //int vehNum = 0;
+    RngSeedManager::SetSeed (6+i);
+    RngSeedManager::SetRun (7+i);
+
+    //int d = delta;
+    for (uint32_t j = 0; j < 4; ++j)
+    {
+      double uniform_var = rngNodes->GetValue(0,1);
+      if(uniform_var <= 1)
+      {
+        ++nodesNumber;
+        //std::cout << x << " " << ++j << std::endl;
+        positionAlloc->Add (Vector (x, j*3, 0.0));
+      }
+    }
+  }
+  for(int i = 501; i <= 1000; ++i)
+  {
+    int x = i * 5;
+    //int vehNum = 0;
+    RngSeedManager::SetSeed (6+i);
+    RngSeedManager::SetRun (7+i);
+
+    //int d = delta;
+    for (uint32_t j = 0; j < 4; ++j)
+    {
+      double uniform_var = rngNodes->GetValue(0,1);
+      //std::cout << (double)(1000-i)/500 << std::endl;
+      if(uniform_var <= (double)(1000-i)/500)
+      {
+        ++nodesNumber;
+        //std::cout << x << " " << ++j << std::endl;
+        positionAlloc->Add (Vector (x, j*3, 0.0));
+      }
+    }
+  }
   /////////////////////////////////std::cout << nodesNumber << std::endl;
   nodes = NodeContainer ();
   nodes.Create (nodesNumber);      
@@ -407,19 +538,44 @@ CreateWaveNodes (void)
   // Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",
   //              MakeBoundCallback (&CourseChange, &outfile));
 
+  fout << "###################################################################" << std::endl;
+
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> node_src = (*i);
+
+    //init node configure
+    nodeDensity[node_src] = 0;          
+    nodePower[node_src] = 30;
+    distanceMax[node_src] = 0;
+
     Ptr<MobilityModel> model_src = node_src->GetObject<MobilityModel> ();
     Vector pos_src = model_src->GetPosition ();
-
 
     fout << "node id: "<< node_src->GetId()
          << " node position: " << pos_src << std::endl;
 
-    if((pos_src.x < 1000) || (pos_src.x > 4000))
+    if(pos_src.x < 1000) 
     {
+      practicalDensity[node_src] = 50;
       continue;
+    }
+    else if (pos_src.x > 4000)
+    {
+      practicalDensity[node_src] = 1600 - (8*pos_src.x/25);
+      continue;
+    }
+    else if (pos_src.x <= 2000)
+    {
+      practicalDensity[node_src] = 50;
+    }
+    else if ((pos_src.x > 2000) && (pos_src.x <= 2500))
+    {
+      practicalDensity[node_src] = 800;
+    }
+    else if ((pos_src.x > 2500) && (pos_src.x <= 4000))
+    {
+      practicalDensity[node_src] = 1600 - (8*pos_src.x/25);
     }
     for(NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)    
     {
@@ -430,7 +586,7 @@ CreateWaveNodes (void)
       }
       Ptr<Node> node_dest = (*j);
       Ptr<MobilityModel> model_dest = node_dest->GetObject<MobilityModel> ();  
-      int distance = model_src->GetDistanceFrom (model_dest);
+      double distance = model_src->GetDistanceFrom (model_dest);
       if(distance <= 1000)
       {
         receiversNum[distance] += ((simulationTime-1) * frequencySafety); 
@@ -439,59 +595,45 @@ CreateWaveNodes (void)
       {
         receiveTotal += (simulationTime * frequencySafety);    
       }
-    } 
-    
+    }  
   }
-  fout << std::endl; 
 
-  // for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
-  // {
-  //   Ptr<Node> node = (*i);
-  //   Ptr<MobilityModel> model = node->GetObject<MobilityModel> ();
-  //   Vector pos = model->GetPosition ();
-  //   NS_LOG_DEBUG ( node->GetId() <<" position: " << pos);
-  // }
+  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+  {
+    Ptr<Node> node = (*i);
+    Ptr<MobilityModel> model = node->GetObject<MobilityModel> ();
+    Vector pos = model->GetPosition ();
+    NS_LOG_DEBUG ( node->GetId() <<" position: " << pos);
+  }
   SetChannel();                                                     //set channel paremeter
   for (uint32_t i = 0; i != devices.GetN (); ++i)
   {
     devices.Get (i)->SetReceiveCallback (MakeCallback (&Receive));
   }
-
- 
 }
-
 
 void
 CalculateTxPower ()
 {
   Time now = Now (); 
   //std::cout << "Time: " << now.GetSeconds() << "s" << std::endl;
-
+  //double meanDensity = 0;
+  double total = 0;
+  double ii = 0;
+  //int lastPower = (int)nodePower[nodes.Get(nodesNumber/2)];
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> receiveNode = (*i);
     
-    double neighborNum = receiveStat[receiveNode].size();
-    nodeDensity[receiveNode] = LAMBDA * neighborNum / (distanceMax[receiveNode] * 2);
-
-    //Ptr<MobilityModel> model = receiveNode->GetObject<MobilityModel> ();
-    //Vector pos = model->GetPosition ();
-
-    //char filename[] = "..."; // 此处写入文件名
+    uint32_t neighborNum = 0;
+    /// = receiveStat[receiveNode].size();
+ 
+    Ptr<MobilityModel> model = receiveNode->GetObject<MobilityModel> ();
+    Vector receivePos = model->GetPosition ();
     
-    // fout << "node id: "<< receiveNode->GetId()
-    //      << " node position: " << pos << std::endl;
     //std::cout << "node id: "<< receiveNode->GetId() << " max distance: " << distanceMax[receiveNode] << " neighbors number: " << neighborNum << " local density: " << nodeDensity[receiveNode] << std::endl;
-    
-    
-    // for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
-    // {
-    //   if (i != j)
-    //   {
-    //     Ptr<Node> sendNode = (*j);
-    //     receiveStat[receiveNode][sendNode] = 0;
-    //   }
-    // }
+
+
     std::vector<double> distanceVec;
     for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
     {
@@ -500,56 +642,79 @@ CalculateTxPower ()
         continue;
       }
       Ptr<Node> sendNode = (*j);
-      //std::cout << receiveNode->GetId() << "-" <<sendNode->GetId() <<" "<< receiveDistance[receiveNode][sendNode] << std::endl;
-      if (receiveDistance[receiveNode][sendNode] != 0)
+      if ((receiveDistance[receiveNode][sendNode]<=distanceMax[receiveNode])&&(receiveStat[receiveNode][sendNode]>0))
       {
+        neighborNum++;
         distanceVec.push_back(receiveDistance[receiveNode][sendNode]);
       }
+
     }
+
     sort(distanceVec.begin(), distanceVec.end());
-    double targetDistance;
-    if (neighborNum > THRESHOLD)
+    //distanceMax[receiveNode] = distanceVec.back();
+    //std::cout << distanceMax[receiveNode] << " " << distanceVec.back() << std::endl;
+    // if(receiveNode->GetId() == nodesNumber/2)
+    // {
+    //   for(std::vector<double>::iterator j = distanceVec.begin(); j != distanceVec.end(); ++j)
+    //   {
+    //     fout << *j << std::endl;
+    //   }
+      
+    // }
+    nodeDensity[receiveNode] = LAMBDA * neighborNum / (distanceMax[receiveNode] * 2);
+    
+
+    // if(receiveNode->GetId() == nodesNumber/2)
+    // {
+    //   std::cout << neighborNum << " " << distanceMax[receiveNode] << std::endl;
+    // }
+    if ((receivePos.x > 1000)&&(receivePos.x < 4000))
     {
-      targetDistance = distanceVec[THRESHOLD];                             
+      total += nodeDensity[receiveNode];
+      ii++;
     }
-    else
-    {
-      targetDistance = 1000 * THRESHOLD / nodeDensity[receiveNode] / 2;
-    }
-    nodePower[receiveNode] =  rxThreshold - 10 * std::log10((0.5*0.5*0.5*0.5) / (targetDistance*targetDistance*targetDistance*targetDistance));
-    //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl; 
-    if (nodePower[receiveNode] > 30)
-    {
-      nodePower[receiveNode] = 30;
-    }
-    else if (nodePower[receiveNode] < 7)
-    {
-      nodePower[receiveNode] = 7;
-    }
-    //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl;  
+
+    // double targetDistance;
+    // if (neighborNum > receiversThres)
+    // {
+    //   targetDistance = distanceVec[receiversThres];                             
+    // }
+    // else
+    // {
+    //   targetDistance = 1000 * receiversThres / nodeDensity[receiveNode] / 2;
+    // }
+    // nodePower[receiveNode] =  rxThreshold - 10 * std::log10((1.259*1.259*0.5*0.5*0.5*0.5) / (targetDistance*targetDistance*targetDistance*targetDistance));
+
+    // if (nodePower[receiveNode] > 30)
+    // {
+    //   nodePower[receiveNode] = 30;
+    // }
+    // else if (nodePower[receiveNode] < 0)
+    // {
+    //   nodePower[receiveNode] = 0;
+    // }
+    // if (!powerControl)
+    // {
+    //   nodePower[receiveNode] = configPower;
+    // }
+    // //std::cout << "node id: "<< receiveNode->GetId() << " target distance: " << targetDistance << " tx power: " << (int)nodePower[receiveNode] << std::endl;  
     receiveStat[receiveNode].clear();
+    receiveDistance[receiveNode].clear();
+    distanceVec.clear();
+    distanceMax[receiveNode] = 0;
+    //std::cout << receiveNode->GetId() << ": " << (int)nodePower[receiveNode] << std::endl;
   }
 
+  //meanDensity = total / ii;
 
+  //std::cout << "practical density: " << density;
+  //std::cout << " Mean Estimate density: " << meanDensity << "; Middle node density: " << nodeDensity[nodes.Get(nodesNumber/2)] << std::endl;
+  //std::cout << nodeDensity[nodes.Get(nodesNumber/2)] << std::endl;
 
-  // double meanDensity = 0;
-  // double total = 0;
-  // double ii = 0;
-  // for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
-  // {
-  //   Ptr<Node> receiveNode = (*i);
-  //   total += nodeDensity[receiveNode];
-  //   ii++;
-  // }
-  // meanDensity = total / ii;
-  // std::cout << "Mean density: " << meanDensity << std::endl;
+  //std::cout << "*************************" << std::endl;
 }
 
-/***************************************************************************
-* Receive a packet. To calculate PRR,receiveTotal++ when function is called 
-* To calculate PDR,To calculate PDR,receiveSafety++ only if every neighbors
-* of senders receive the packet.
-****************************************************************************/
+
 bool
 Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address &sender)
 {
@@ -557,9 +722,12 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   StatsTag tag;
   double delay;
   bool result;
+  //double packetSize;
   //uint32_t src_id;
   //uint32_t dest_id;
   result = pkt->FindFirstMatchingByteTag (tag);
+  //packetSize = pkt.GetSize();
+  //throughput += sizeSafety;
   if (!result)
   {
     NS_FATAL_ERROR ("the packet here shall have a stats tag");
@@ -580,11 +748,24 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
 
   double distance = CalculateDistance (dest_pos, src_pos);
   uint32_t src_id = tag.GetNodeId();
+  // uint32_t dest_id = node->GetId();
+  // if (distance < 20)
+  // {
+  //   std::cout << src_id << " " << dest_id << std::endl;
+  // }
   Ptr<Node> src_node = nodes.Get(src_id);
+
+  // if(dest_id == nodesNumber/2)
+  // {
+  //   if(distance > 500)
+  //   {
+  //     std::cout << src_node->GetId() << ": " << (int)nodePower[src_node] << " " <<  nodeDensity[src_node] << std::endl; 
+  //   }
+  // }
   // dest_id = node->GetId();
   // receiveStats[dest_id][src_id]++;
   receiveStat[node][src_node]++;
-  if (distance > distanceMax[node])
+  if ((distance > distanceMax[node])&&(receiveStat[node][src_node] > 3))
   {
     distanceMax[node] = distance;
   }
@@ -594,7 +775,7 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   {  
     if(1)
     {
-      int distance = CalculateDistance (dest_pos, src_pos);
+      uint32_t distance = CalculateDistance (dest_pos, src_pos);
       if(sendTime.GetMilliSeconds() > 1000)
       {
         ++receiveNum[distance];
@@ -648,11 +829,8 @@ SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
   //uint8_t txPower = sender->CalculateTxPower();
-  if (powerControl)
-  {
-    txPower = nodePower[src];
-  }
-  
+  //txPower = nodePower[src];
+  txPower = configPower;
   //std::cout << (int)txPower << std::endl;
   TxInfo info = TxInfo (channelNumber, 7, wave_mode, 0, txPower);  
   //std::cout << "nodeID: " << sender->GetNode()->GetId() << " time: "<< now.GetMicroSeconds() << " txPower " << (int32_t)txPower << std::endl;
@@ -725,16 +903,26 @@ Stats (void)
   
   NS_LOG_UNCOND (" safety packet: ");
   NS_LOG_UNCOND ("  sends = " << safetyPacketID);
-  //Ptr<Node> middleNode = nodes.Get(nodesNumber/2);
-  NS_LOG_UNCOND (" tx power = " << (int)txPower);
+  Ptr<Node> middleNode = nodes.Get(nodesNumber/2);
+  NS_LOG_UNCOND ("  tx power = " << (int)nodePower[middleNode]);
   //NS_LOG_UNCOND ("  queues = " << queueSafety);
   // second show performance result
   NS_LOG_UNCOND (" performance result:");
-  std::map<int,uint32_t>::iterator i;
+  std::map<double,uint32_t>::iterator i;
   std::map<uint32_t, uint32_t>::iterator j;
+
+  for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
+  {
+    Ptr<Node> node = (*i);
+    Ptr<MobilityModel> model = node->GetObject<MobilityModel> ();
+    Vector pos = model->GetPosition ();
+    //std::cout << pos << " " <<
+    NS_LOG_UNCOND ( pos.x << " " << practicalDensity[node] << " " << nodeDensity[node]);
+
+  }
   for(i = receiversNum.begin(); i != receiversNum.end(); ++i)
   {
-     int distance = i->first;
+     double distance = i->first;
      //std::cout << distance << "m " << receiveNum[distance] << " " << i->second << std::endl;
      //NS_LOG_UNCOND (" distance:" << i->first  << "receive rate:" << (double)(receiveNum[distance])/(i->second));
      std::cout<<" distance:" << i->first  << " receive rate:" << (double)(receiveNum[distance])/(i->second)<<std::endl;;
@@ -798,22 +986,9 @@ main()
 {
   //LogComponentEnable ("power-control", LOG_LEVEL_DEBUG);
   GetTime();
-  densityIndex = 4.0;
-  
-  powerControl = false;
-  txPower = 30;
-  Run();
-
-
-  powerControl = false;
-  txPower = 20;
-  Run();
-
-  powerControl = false;
-  txPower = 10;
-  Run();
-
-  powerControl = true;
-  Run();
+  configPower = 20;
+  std::cout << "tx power: " << (int)configPower << "dbm" <<  std::endl;
+  density = 50;
+  Run ();
+   
 }
- 

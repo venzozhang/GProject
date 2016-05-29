@@ -461,7 +461,6 @@ CreateWaveNodes (void)
 }
 
 
-
 void
 CalculateTxPower ()
 {
@@ -470,7 +469,7 @@ CalculateTxPower ()
   // double meanDensity = 0;
   // double total = 0;
   // double ii = 0;
-  // int lastPower = (int)nodePower[nodes.Get(nodesNumber/2)];
+  //int lastPower = (int)nodePower[nodes.Get(nodesNumber/2)];
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> receiveNode = (*i);
@@ -482,7 +481,8 @@ CalculateTxPower ()
     //Vector receivePos = model->GetPosition ();
     
     //std::cout << "node id: "<< receiveNode->GetId() << " max distance: " << distanceMax[receiveNode] << " neighbors number: " << neighborNum << " local density: " << nodeDensity[receiveNode] << std::endl;
-   
+
+
     std::vector<double> distanceVec;
     for (NodeContainer::Iterator j = nodes.Begin (); j != nodes.End (); ++j)
     {
@@ -491,27 +491,40 @@ CalculateTxPower ()
         continue;
       }
       Ptr<Node> sendNode = (*j);
-      if (receiveStat[receiveNode][sendNode] > 2)
+      if ((receiveDistance[receiveNode][sendNode] <= distanceMax[receiveNode])&&(receiveStat[receiveNode][sendNode]>0))
       {
+        // if(receiveDistance[receiveNode][sendNode] <= distanceMax[receiveNode])
+        //   std::cout << "equal" << std::endl;
         neighborNum++;
         distanceVec.push_back(receiveDistance[receiveNode][sendNode]);
       }
+
     }
 
     sort(distanceVec.begin(), distanceVec.end());
-    distanceMax[receiveNode] = distanceVec.back();
-    
+    //distanceMax[receiveNode] = distanceVec.back();
+    //std::cout << receiveNode->GetId() <<" "<< distanceMax[receiveNode] << " " << distanceVec.back() << std::endl;
+    // if(receiveNode->GetId() == nodesNumber/2)
+    // {
+    //   for(std::vector<double>::iterator j = distanceVec.begin(); j != distanceVec.end(); ++j)
+    //   {
+    //     fout << *j << std::endl;
+    //   }
+      
+    // }
     nodeDensity[receiveNode] = LAMBDA * neighborNum / (distanceMax[receiveNode] * 2);
     
 
-    
+    // if(receiveNode->GetId() == nodesNumber/2)
+    // {
+    //   std::cout << neighborNum << " " << distanceMax[receiveNode] << std::endl;
+    // }
     // if ((receivePos.x > 1000)&&(receivePos.x < 4000))
     // {
     //   total += nodeDensity[receiveNode];
     //   ii++;
     // }
 
-    sort(distanceVec.begin(), distanceVec.end());
     double targetDistance;
     if (neighborNum > receiversThres)
     {
@@ -522,7 +535,10 @@ CalculateTxPower ()
       targetDistance = 1000 * receiversThres / nodeDensity[receiveNode] / 2;
     }
     nodePower[receiveNode] =  rxThreshold - 10 * std::log10((1.259*1.259*0.5*0.5*0.5*0.5) / (targetDistance*targetDistance*targetDistance*targetDistance));
-
+    if (receiveNode->GetId() == 121)
+    {
+      std::cout << "density:" << nodeDensity[receiveNode] << "  target distance:" << targetDistance << " power: " << nodePower[receiveNode] << std::endl;
+    }
     if (nodePower[receiveNode] > 30)
     {
       nodePower[receiveNode] = 30;
@@ -545,8 +561,8 @@ CalculateTxPower ()
 
   //meanDensity = total / ii;
 
-  //std::cout << "time: " << Now().GetSeconds() <<"s; tx power: "<< lastPower << "dbm;" << std::endl;
-  //std::cout << "Mean Estimate density: " << meanDensity << "; Middle node density: " << nodeDensity[nodes.Get(nodesNumber/2)] << std::endl;
+  // std::cout << "time: " << Now().GetSeconds() <<"s; tx power: "<< lastPower << "dbm;" << std::endl;
+  // std::cout << "Mean Estimate density: " << meanDensity << "; Middle node density: " << nodeDensity[nodes.Get(nodesNumber/2)] << std::endl;
   //std::cout << nodeDensity[nodes.Get(nodesNumber/2)] << std::endl;
 
   //std::cout << "*************************" << std::endl;
@@ -597,15 +613,25 @@ Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address
   // }
   Ptr<Node> src_node = nodes.Get(src_id);
 
-  
+  // if(dest_id == nodesNumber/2)
+  // {
+  //   if(distance > 500)
+  //   {
+  //     std::cout << src_node->GetId() << ": " << (int)nodePower[src_node] << " " <<  nodeDensity[src_node] << std::endl; 
+  //   }
+  // }
   // dest_id = node->GetId();
   // receiveStats[dest_id][src_id]++;
   receiveStat[node][src_node]++;
-  // if ((distance > distanceMax[node])&&(receiveStat[node][src_node] > 2)
-  // {
-  //   distanceMax[node] = distance;
-  // }
+  if ((distance > distanceMax[node])&&(receiveStat[node][src_node] > 3))
+  {
+    distanceMax[node] = distance;
+  }
   receiveDistance[node][src_node] = distance;
+  if (node->GetId() == 121)
+  {
+    std::cout << " receive a wsmp message from " << src_id << std::endl;
+  }
 
   if((src_pos.x <= 4000) && (src_pos.x >= 1000))
   {  
@@ -824,8 +850,8 @@ main()
 {
   //LogComponentEnable ("power-control", LOG_LEVEL_DEBUG);
   GetTime();
-  //receiversThres
-  //configPower = 10;
+  // receiversThres
+  // configPower = 10;
   //std::cout << "tx power: " << (int)configPower << "dbm" << std::endl;
 
   // for(int i = 50; i <= 60;)
@@ -875,29 +901,42 @@ main()
 
   //   i += 2;
   // }
-  std::cout << "**********************************************************************" << std::endl;
-  for(int i = 46; i <= 60;)
-  {
-    density = 10*i;
-    receiversThres = 0;
-    //std::cout << "*******************************" << std::endl;
-    powerControl = false;
-    // configPower = 10;
-    // Run();
-    configPower = 30;
-    Run();
-    // configPower = 30;
-    // Run();
-
-    // powerControl = true;
-    // receiversThres = 60;
-    // Run();
-    // receiversThres = 70;
-    // Run();
-    // receiversThres = 80;
-    // Run();
-
-    i += 2;
-  }
+  // std::cout << "**********************************************************************" << std::endl;
+  // for(int i = 2; i <= 60;)
+  // {
+  //   density = 10*i;
+   
+  //   powerControl = true;
+  //   receiversThres = 60;
+  //   Run();
+  //   i += 2;
+  // }
+  // std::cout << "**********************************************************************" << std::endl;
+  // for(int i = 2; i <= 60;)
+  // {
+  //   density = 10*i;
+   
+  //   powerControl = true;
+  //   receiversThres = 90;
+  //   Run();
+  //   i += 2;
+  // }
+  // std::cout << "**********************************************************************" << std::endl;
+  // for(int i = 2; i <= 60;)
+  // {
+  //   density = 10*i;
+   
+  //   powerControl = true;
+  //   receiversThres = 100;
+  //   Run();
+  //   i += 2;
+  // }
+  GetTime();
+  density = 200; 
+  powerControl = true;
+  
+  //configPower = 15;
+  receiversThres = 100;
+  Run();
 }
  

@@ -274,6 +274,7 @@ std::ofstream outfile;
 std::string traceFile;
 std::string sumoData;
 
+std::ofstream fout("position.log");
 
 void
 Init ()
@@ -399,6 +400,8 @@ CreateWaveNodes (void)
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (nodes);
 
+  fout << "###################################################################" << std::endl;
+
   // Config::Connect ("/NodeList/*/$ns3::MobilityModel/CourseChange",
   //              MakeBoundCallback (&CourseChange, &outfile));
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
@@ -412,6 +415,10 @@ CreateWaveNodes (void)
 
     Ptr<MobilityModel> model_src = node_src->GetObject<MobilityModel> ();
     Vector pos_src = model_src->GetPosition ();
+
+    fout << "node id: "<< node_src->GetId()
+         << " node position: " << pos_src << std::endl;
+
     if((pos_src.x < 1000) || (pos_src.x > 4000))
     {
       continue;
@@ -461,7 +468,7 @@ CalculateTxPower ()
   double meanDensity = 0;
   double total = 0;
   double ii = 0;
-  int lastPower = (int)nodePower[nodes.Get(nodesNumber/2)];
+  //int lastPower = (int)nodePower[nodes.Get(nodesNumber/2)];
   for (NodeContainer::Iterator i = nodes.Begin (); i != nodes.End (); ++i)
   {
     Ptr<Node> receiveNode = (*i);
@@ -548,8 +555,8 @@ CalculateTxPower ()
 
   meanDensity = total / ii;
 
-  std::cout << "practical density: " << density << " tx power: "<< (int)lastPower << "dbm; " ;
-  std::cout << "Mean Estimate density: " << meanDensity << "; Middle node density: " << nodeDensity[nodes.Get(nodesNumber/2)] << std::endl;
+  std::cout << "practical density: " << density;
+  std::cout << " Mean Estimate density: " << meanDensity << "; Middle node density: " << nodeDensity[nodes.Get(nodesNumber/2)] << std::endl;
   //std::cout << nodeDensity[nodes.Get(nodesNumber/2)] << std::endl;
 
   //std::cout << "*************************" << std::endl;
@@ -674,7 +681,7 @@ SendWsmpPackets (Ptr<WaveNetDevice> sender, uint32_t channelNumber)
   //wifi_mode = WifiMode();
   //std::cout << wifi_mode.GetCodeRate() << wifi_mode.  
   //uint8_t txPower = sender->CalculateTxPower();
-  txPower = nodePower[src];
+  //txPower = nodePower[src];
   txPower = configPower;
   //std::cout << (int)txPower << std::endl;
   TxInfo info = TxInfo (channelNumber, 7, wave_mode, 0, txPower);  
