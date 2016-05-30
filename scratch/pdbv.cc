@@ -645,7 +645,15 @@ Init ()
 
   txPower = 30;
 
-
+  nodeRelay.clear();
+  nodeRelayEvent.clear();
+  nodeRetransmissionEvent.clear();
+  totalDelay.clear();
+  meanDelay.clear();
+  receiveNum.clear();
+  relayNum.clear();
+  validRelayNum.clear();
+  nodeReceiveNum.clear();
 }
 
 
@@ -1464,13 +1472,14 @@ SendMultihopPacket (Ptr<WaveNetDevice> sender,  Ptr<Packet> packet)
 
   txPower = nodePower[src];
   TxInfo info = TxInfo (CCH, 7, wave_mode, 0, txPower);
+  
+  //std::cout  << " relay by " << src->GetId() <<" " << Now().GetMilliSeconds() << std::endl;
+  sender->SendX (packet, dest, WSMP_PROT_NUMBER, info);
   if(hop > 0)
   {
     TxInfo ackInfo = TxInfo (CCH, 7, wave_mode, 0, 30); 
     sender->SendX (ack, dest, WSMP_PROT_NUMBER, ackInfo);
   }
-  //std::cout  << " relay by " << src->GetId() <<" " << Now().GetMilliSeconds() << std::endl;
-  sender->SendX (packet, dest, WSMP_PROT_NUMBER, info);
   //std::cout << nodeid << " send packet" << std::endl;
   EventId retransmitEvent = Simulator::Schedule (MilliSeconds (100), RetransmissionMultihopPacket, sender, packet);
   nodeRetransmissionEvent[src][packetId] = retransmitEvent;
@@ -1621,6 +1630,7 @@ Stats (void)
   //uint32_t meanDelay = delay / receive;
   double receiveRate = (double)(relayPacketID - lossPacket) / (double)relayPacketID;
   NS_LOG_UNCOND("Success Rate: " << receiveRate << " retransmission time: " << retrNum);
+
   //NS_LOG_UNCOND("Total Relay num: " << receiveRate);
   //NS_LOG_UNCOND("Mean Delay: " << meanDelay);
 }
@@ -1667,11 +1677,15 @@ main()
 {
   //LogComponentEnable ("power-control", LOG_LEVEL_DEBUG);
   GetTime();
-  density = 500; 
-  powerControl = true;
+  for (int i = 1; i <= 5; ++i)
+  {
+    density = 100 * i;
+    powerControl = true;
   
   //configPower = 15;
-  receiversThres = 100;
-  Run();
+    receiversThres = 100;
+    Run();
+  }
+
 }
  

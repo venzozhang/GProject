@@ -636,7 +636,13 @@ Init ()
   //receiveSafety  = 0;
 
   txPower = 30;
-
+  nodeRelay.clear ();
+  nodeRelayEvent.clear ();
+  totalDelay.clear ();
+  meanDelay.clear ();
+  receiveNum.clear ();
+  relayNum.clear ();
+  validRelayNum.clear ();
 
 }
 
@@ -1400,12 +1406,20 @@ main()
 {
   //LogComponentEnable ("power-control", LOG_LEVEL_DEBUG);
   GetTime();
+  for (int i = 1; i <= 5; ++i)
+  {
+    density = 100 * i;
+    powerControl = false;
+  
+    configPower = 15;
+    receiversThres = 100;
+    Run();
+  }
 
-
-  density = 100; 
-  powerControl = false;
-  configPower = 15;
-  receiversThres = 100;
-  Run();
+  // density = 100; 
+  // powerControl = false;
+  // configPower = 15;
+  // receiversThres = 100;
+  // Run();
 }
  
